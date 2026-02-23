@@ -55,6 +55,42 @@ class FoodItem {
     this.discardedDate,
   });
 
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'category': category.toMap(), 
+      'emoji': emoji,
+      'purchaseDate': purchaseDate.toIso8601String(),
+      'expiryDate': expiryDate.toIso8601String(),
+      'quantity': quantity,
+      'unit': unit,
+      'notes': notes,
+      'isConsumed': isConsumed,
+      'isDiscarded': isDiscarded,
+      'consumedDate': consumedDate?.toIso8601String(),
+      'discardedDate': discardedDate?.toIso8601String(),
+    };
+  }
+
+  static FoodItem fromMap(Map<String, dynamic> map) {
+    return FoodItem(
+      id: map['id'] ?? '',
+      name: map['name'] ?? '',
+      category: FoodCategory.fromMap(map['category'] ?? {}),
+      emoji: map['emoji'] ?? '📦',
+      purchaseDate: DateTime.tryParse(map['purchaseDate'] ?? '') ?? DateTime.now(),
+      expiryDate: DateTime.tryParse(map['expiryDate'] ?? '') ?? DateTime.now(),
+      quantity: map['quantity'] ?? 1,
+      unit: map['unit'] ?? 'piece',
+      notes: map['notes'],
+      isConsumed: map['isConsumed'] ?? false,
+      isDiscarded: map['isDiscarded'] ?? false,
+      consumedDate: map['consumedDate'] != null ? DateTime.tryParse(map['consumedDate']!) : null,
+      discardedDate: map['discardedDate'] != null ? DateTime.tryParse(map['discardedDate']!) : null,
+    );
+  }
+
   int get daysRemaining => expiryDate.difference(DateTime.now()).inDays;
 
   FoodStatus get status {

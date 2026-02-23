@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:smart_pantry/models/food_item.dart';
 import 'package:smart_pantry/models/food_category.dart';
 import 'package:smart_pantry/services/mock_data_service.dart';
+
 
 class FoodItemsProvider extends ChangeNotifier {
   List<FoodItem> _items = [];
@@ -54,8 +56,14 @@ class FoodItemsProvider extends ChangeNotifier {
     });
   }
 
-  void addItem(FoodItem item) {
+  Future<void> addItem(FoodItem item, {File? imageFile}) async {
     _items.add(item);
+    
+    // ตรงนี้เผื่ออนาคตคุณจะเขียนโค้ดอัปโหลดรูปขึ้น Firebase ด้วย imageFile ครับ
+    // if (imageFile != null) {
+    //   await firestoreService.uploadImage(userId, item.id, imageFile);
+    // }
+    
     notifyListeners();
   }
 
