@@ -23,42 +23,22 @@ class CategoryIcon extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              category.color,
-              category.color.withOpacity(0.8),
-            ],
+            colors: [category.color, category.color.withOpacity(0.8)],
           ),
           borderRadius: BorderRadius.circular(AppTheme.cardRadius),
-          border: isSelected
-              ? Border.all(color: Colors.white, width: 3)
-              : null,
+          border: isSelected ? Border.all(color: Colors.white, width: 3) : null,
           boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: category.color.withOpacity(0.4),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  )
-                ]
+              ? [BoxShadow(color: category.color.withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 4))]
               : [],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              category.emoji,
-              style: const TextStyle(fontSize: 32),
-            ),
+            Text(category.emoji, style: const TextStyle(fontSize: 32)),
             const SizedBox(height: 6),
-            Text(
-              category.label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-              textAlign: TextAlign.center,
-            ),
+            Text(category.label,
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
+                textAlign: TextAlign.center),
           ],
         ),
       ),

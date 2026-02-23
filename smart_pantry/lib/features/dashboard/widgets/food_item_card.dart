@@ -23,13 +23,23 @@ class FoodItemCard extends StatelessWidget {
         ),
         child: Row(
           children: [
+            // Image or Emoji
             Container(
-              width: 68, height: 68,
+              width: 68,
+              height: 68,
               decoration: BoxDecoration(
                 color: item.status.backgroundColor,
                 borderRadius: BorderRadius.circular(12),
+                image: item.imageUrl != null
+                    ? DecorationImage(
+                        image: NetworkImage(item.imageUrl!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
               ),
-              child: Center(child: Text(item.emoji, style: const TextStyle(fontSize: 36))),
+              child: item.imageUrl == null
+                  ? Center(child: Text(item.emoji, style: const TextStyle(fontSize: 36)))
+                  : null,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -48,8 +58,11 @@ class FoodItemCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text('${item.daysRemaining}', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: item.status.color)),
-                Text(item.daysRemaining >= 0 ? 'DAYS\nLEFT' : 'DAYS\nAGO',
-                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.grey[500], height: 1.2), textAlign: TextAlign.end),
+                Text(
+                  item.daysRemaining >= 0 ? 'DAYS\nLEFT' : 'DAYS\nAGO',
+                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.grey[500], height: 1.2),
+                  textAlign: TextAlign.end,
+                ),
               ],
             ),
           ],
