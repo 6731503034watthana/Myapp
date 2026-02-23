@@ -1,0 +1,39 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "smart-pantry-ef421",
+          "appId": "1:91678987925:android:c15f9e8a25dc6f4dfdad9c",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "smart-pantry-ef421",
+          "configurations": {
+            "android": "1:91678987925:android:c15f9e8a25dc6f4dfdad9c",
+            "ios": "1:91678987925:ios:408735ad5cab4552fdad9c",
+            "macos": "1:91678987925:ios:408735ad5cab4552fdad9c",
+            "web": "1:91678987925:web:419f93b8c413d292fdad9c",
+            "windows": "1:91678987925:web:a97c67f972529f15fdad9c"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

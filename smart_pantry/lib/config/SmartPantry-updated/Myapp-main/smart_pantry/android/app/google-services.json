@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "91678987925",
+    "project_id": "smart-pantry-ef421",
+    "storage_bucket": "smart-pantry-ef421.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:91678987925:android:c15f9e8a25dc6f4dfdad9c",
+        "android_client_info": {
+          "package_name": "com.example.smart_pantry"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBvoUbOgfy7oSq-XENbChmIhBdIxSt7zvg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

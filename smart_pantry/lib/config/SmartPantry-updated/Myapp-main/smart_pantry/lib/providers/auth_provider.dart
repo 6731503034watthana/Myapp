@@ -98,10 +98,10 @@ class AuthProvider extends ChangeNotifier {
       final userCredential = await _auth.signInWithCredential(credential);
 
       // ถ้าเป็น user ใหม่ สร้าง default categories
-     // ถ้าเป็น user ใหม่ สร้าง default categories
-      if (userCredential.additionalUserInfo?.isNewUser == true && userCredential.user != null) {
-      await _firestoreService.initDefaultCategories(userCredential.user!.uid);
+      if (userCredential.additionalUserInfo?.isNewUser == true && _user != null) {
+        await _firestoreService.initDefaultCategories(_user!.uid);
       }
+
       _isLoading = false;
       notifyListeners();
       return true;
