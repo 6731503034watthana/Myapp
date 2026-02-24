@@ -39,11 +39,19 @@ dependencies:
   intl: ^0.20.2
   uuid: ^4.5.2
   google_fonts: ^8.0.1
+<<<<<<< HEAD
   firebase_core: ^2.32.0
   firebase_auth: ^4.19.6
   cloud_firestore: ^4.17.4
   google_sign_in: ^6.2.1
   image_picker: ^1.1.1 # สำหรับปุ่มถ่ายรูปและอัปโหลดรูป
+=======
+  firebase_core: ^4.4.0
+
+  firebase_auth: ^4.17.0      # สำหรับระบบ Login
+  google_sign_in: ^6.2.1      # สำหรับปุ่ม Login with Google
+  cloud_firestore: ^4.14.0    # เนื่องจากเห็นว่ามีการเรียกใช้ FirestoreService
+>>>>>>> 1ceab7ec31c293d7565f0c91b8a0db451b42a19e
 
 dev_dependencies:
   flutter_test:
