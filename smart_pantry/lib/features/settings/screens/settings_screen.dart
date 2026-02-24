@@ -46,10 +46,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(height: 1, indent: 16, endIndent: 16),
           _sectionHeader('📋', 'Weekly Report'),
           _toggleRow('Enable Weekly Report', 'Sent to somsri@example.com', _weeklyReport, (val) => setState(() => _weeklyReport = val)),
+          
+          // แก้ไขปุ่มตรงนี้ตาม PDF
           Padding(padding: const EdgeInsets.all(16), child: SizedBox(width: double.infinity, height: AppTheme.minTouchTarget, child: OutlinedButton(
             onPressed: () => _showClearDialog(context),
             style: OutlinedButton.styleFrom(foregroundColor: AppColors.expired, side: const BorderSide(color: AppColors.expired, width: 2), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.buttonRadius))),
-            child: const Text('🗑️ Clear History', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            child: const Text('🔄 Reset Pantry App', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
           ))),
           const SizedBox(height: 24),
         ])),
@@ -74,14 +76,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ));
   }
 
+  // แก้ไขกล่องข้อความยืนยันตาม PDF
   void _showClearDialog(BuildContext context) {
     showDialog(context: context, builder: (ctx) => AlertDialog(
-      title: const Text('🗑️ Clear History', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
-      content: const Text('Are you sure? This cannot be undone.', style: TextStyle(fontSize: 16)),
+      title: const Text('🔄 Reset Pantry App', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+      content: const Text('คุณแน่ใจแล้วใช่ไหม?', style: TextStyle(fontSize: 16)),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(fontSize: 16))),
-        TextButton(onPressed: () { context.read<FoodItemsProvider>().clearHistory(); Navigator.pop(ctx); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('History cleared', style: TextStyle(fontSize: 16)))); },
-          child: const Text('Clear', style: TextStyle(fontSize: 16, color: AppColors.expired))),
+        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('ยกเลิก', style: TextStyle(fontSize: 16))),
+        TextButton(onPressed: () { 
+          context.read<FoodItemsProvider>().clearHistory(); 
+          Navigator.pop(ctx); 
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('รีเซ็ตระบบเรียบร้อยแล้ว', style: TextStyle(fontSize: 16)))); 
+        },
+          child: const Text('ยืนยัน', style: TextStyle(fontSize: 16, color: AppColors.expired))),
       ],
     ));
   }

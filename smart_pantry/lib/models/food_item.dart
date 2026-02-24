@@ -31,8 +31,9 @@ class FoodItem {
   final String emoji;
   final DateTime purchaseDate;
   final DateTime expiryDate;
-  final int quantity;
+  final double quantity;      // เปลี่ยนเป็น double เพื่อรองรับทศนิยม เช่น 1.5
   final String unit;
+  final String? imagePath;    // เพิ่มตัวแปรสำหรับเก็บที่อยู่รูปภาพ (เผื่อไม่ได้ใส่รูป เลยให้เป็น null ได้)
   final String? notes;
   bool isConsumed;
   bool isDiscarded;
@@ -46,8 +47,9 @@ class FoodItem {
     required this.emoji,
     required this.purchaseDate,
     required this.expiryDate,
-    this.quantity = 1,
-    this.unit = 'piece',
+    this.quantity = 1.0,      // ค่าเริ่มต้นเป็น 1.0
+    this.unit = 'ชิ้น',         // ค่าเริ่มต้นเป็น 'ชิ้น'
+    this.imagePath,           // รับค่า imagePath
     this.notes,
     this.isConsumed = false,
     this.isDiscarded = false,
