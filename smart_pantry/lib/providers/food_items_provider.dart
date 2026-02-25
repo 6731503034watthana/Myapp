@@ -109,7 +109,11 @@ class FoodItemsProvider extends ChangeNotifier {
 
     String? imageUrl;
     if (imageFile != null) {
-      imageUrl = await _firestoreService.uploadImage(_userId!, item.id, imageFile);
+      try {
+        imageUrl = await _firestoreService.uploadImage(_userId!, item.id, imageFile);
+      } catch (_) {
+        // Image upload failed — save item without image
+      }
     }
 
     final itemToSave = FoodItem(
@@ -148,6 +152,24 @@ class FoodItemsProvider extends ChangeNotifier {
         'isDiscarded': true,
         'discardedDate': DateTime.now().toIso8601String(),
       });
+    }
+  }
+
+  Future<void> updateQuantity(String id, int quantity, String unit) async {
+    if (_userId == null) return;
+    final index = _items.indexWhere((i) => i.id == id);
+    if (index != -1) {
+      final item = _items[index];
+      _items[index] = FoodItem(
+        id: item.id, name: item.name, category: item.category,
+        emoji: item.emoji, purchaseDate: item.purchaseDate,
+        expiryDate: item.expiryDate, quantity: quantity,
+        unit: unit, notes: item.notes, imageUrl: item.imageUrl,
+        isConsumed: item.isConsumed, isDiscarded: item.isDiscarded,
+        consumedDate: item.consumedDate, discardedDate: item.discardedDate,
+      );
+      notifyListeners();
+      await _firestoreService.updateFoodItem(_userId!, id, {'quantity': quantity, 'unit': unit});
     }
   }
 
