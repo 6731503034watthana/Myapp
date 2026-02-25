@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_theme.dart';
 import '../../../core/widgets/status_badge.dart';
@@ -32,7 +33,9 @@ class FoodItemCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 image: item.imageUrl != null
                     ? DecorationImage(
-                        image: NetworkImage(item.imageUrl!),
+                        image: item.imageUrl!.startsWith('/')
+                            ? FileImage(File(item.imageUrl!)) as ImageProvider
+                            : NetworkImage(item.imageUrl!),
                         fit: BoxFit.cover,
                       )
                     : null,

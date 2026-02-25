@@ -207,8 +207,11 @@ class _ItemImage extends StatelessWidget {
           height: 200,
           color: item.status.backgroundColor,
           child: item.imageUrl != null
-              ? Image.network(item.imageUrl!, fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Center(child: Text(item.emoji, style: const TextStyle(fontSize: 100))))
+              ? (item.imageUrl!.startsWith('/')
+                  ? Image.file(File(item.imageUrl!), fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Center(child: Text(item.emoji, style: const TextStyle(fontSize: 100))))
+                  : Image.network(item.imageUrl!, fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Center(child: Text(item.emoji, style: const TextStyle(fontSize: 100)))))
               : Center(child: Text(item.emoji, style: const TextStyle(fontSize: 100))),
         ),
         // ปุ่ม Retake / Take Photo
