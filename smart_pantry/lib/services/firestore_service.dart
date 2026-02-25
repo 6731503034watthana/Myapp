@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:smart_pantry/models/food_category.dart';
 import 'package:smart_pantry/models/food_item.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   // ============================================================
   //  CATEGORIES
@@ -125,4 +128,24 @@ class FirestoreService {
     await batch.commit();
   }
 
+  // ============================================================
+  //  IMAGE UPLOAD
+  // ============================================================
+
+  /// อัปโหลดรูปภาพไปยัง Firebase Storage
+  Future<String> uploadImage(String userId, String itemId, File imageFile) async {
+    final ref = _storage.ref().child('users/$userId/items/$itemId.jpg');
+    await ref.putFile(imageFile);
+    return await ref.getDownloadURL();
+  }
+
+  /// ลบรูปภาพ
+  Future<void> deleteImage(String userId, String itemId) async {
+    try {
+      final ref = _storage.ref().child('users/$userId/items/$itemId.jpg');
+      await ref.delete();
+    } catch (_) {
+      // ไม่มีรูปก็ไม่ต้องทำอะไร
+    }
+  }
 }

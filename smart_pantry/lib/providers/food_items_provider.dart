@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:smart_pantry/models/food_item.dart';
 import 'package:smart_pantry/models/food_category.dart';
 import 'package:smart_pantry/services/firestore_service.dart';
@@ -103,21 +102,6 @@ class FoodItemsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ===== Helpers =====
-
-  Future<String?> _saveImageLocally(String itemId, File imageFile) async {
-    try {
-      final appDir = await getApplicationDocumentsDirectory();
-      final dir = Directory('${appDir.path}/food_images');
-      if (!await dir.exists()) await dir.create(recursive: true);
-      final localPath = '${dir.path}/$itemId.jpg';
-      await imageFile.copy(localPath);
-      return localPath;
-    } catch (_) {
-      return null;
-    }
-  }
-
   // ===== Actions =====
 
   Future<void> addItem(FoodItem item, {File? imageFile}) async {
@@ -125,7 +109,11 @@ class FoodItemsProvider extends ChangeNotifier {
 
     String? imageUrl;
     if (imageFile != null) {
-      imageUrl = await _saveImageLocally(item.id, imageFile);
+      try {
+        imageUrl = await _firestoreService.uploadImage(_userId!, item.id, imageFile);
+      } catch (_) {
+        // Image upload failed — save item without image
+      }
     }
 
     final itemToSave = FoodItem(
@@ -187,20 +175,14 @@ class FoodItemsProvider extends ChangeNotifier {
 
   Future<void> updateItemImage(String itemId, File imageFile) async {
     if (_userId == null) return;
-    final localPath = await _saveImageLocally(itemId, imageFile);
-    if (localPath != null) {
-      await _firestoreService.updateFoodItem(_userId!, itemId, {'imageUrl': localPath});
-    }
+    final imageUrl = await _firestoreService.uploadImage(_userId!, itemId, imageFile);
+    await _firestoreService.updateFoodItem(_userId!, itemId, {'imageUrl': imageUrl});
   }
 
   Future<void> removeItem(String id) async {
     if (_userId == null) return;
-    // ลบไฟล์รูปใน local storage ถ้ามี
-    final item = _items.where((i) => i.id == id).firstOrNull;
-    if (item?.imageUrl != null && !item!.imageUrl!.startsWith('http')) {
-      try { await File(item.imageUrl!).delete(); } catch (_) {}
-    }
     await _firestoreService.deleteFoodItem(_userId!, id);
+    await _firestoreService.deleteImage(_userId!, id);
   }
 
   void setCategory(FoodCategory? category) {
