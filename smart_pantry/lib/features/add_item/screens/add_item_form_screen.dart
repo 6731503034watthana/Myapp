@@ -28,6 +28,10 @@ class _AddItemFormScreenState extends State<AddItemFormScreen> {
   File? _imageFile;
   final _picker = ImagePicker();
   bool _isSaving = false;
+  int _quantity = 1;
+  String _selectedUnit = 'unit';
+
+  static const List<String> _unitOptions = ['unit', 'pack', 'box', 'bag', 'kg', 'g', 'L', 'mL', 'piece'];
 
   @override
   void initState() {
@@ -87,6 +91,8 @@ class _AddItemFormScreenState extends State<AddItemFormScreen> {
         emoji: _selectedCategory.emoji,
         purchaseDate: DateTime.now(),
         expiryDate: _expiryDate,
+        quantity: _quantity,
+        unit: _selectedUnit,
       );
 
       await context.read<FoodItemsProvider>().addItem(newItem, imageFile: _imageFile);
@@ -252,7 +258,74 @@ class _AddItemFormScreenState extends State<AddItemFormScreen> {
               ),
               const SizedBox(height: 20),
 
-              // 4. Expiry Date
+              // 4. Quantity
+              const Text('📦 Quantity', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  // Stepper
+                  Expanded(
+                    flex: 5,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            onPressed: _quantity > 1 ? () => setState(() => _quantity--) : null,
+                            icon: const Icon(Icons.remove),
+                            color: AppColors.primary,
+                          ),
+                          Expanded(
+                            child: Text(
+                              '$_quantity',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: _quantity < 999 ? () => setState(() => _quantity++) : null,
+                            icon: const Icon(Icons.add),
+                            color: AppColors.primary,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // Unit Dropdown
+                  Expanded(
+                    flex: 5,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _selectedUnit,
+                          isExpanded: true,
+                          style: const TextStyle(fontSize: 16, color: AppColors.textPrimary),
+                          items: _unitOptions
+                              .map((u) => DropdownMenuItem(value: u, child: Text(u)))
+                              .toList(),
+                          onChanged: (val) {
+                            if (val != null) setState(() => _selectedUnit = val);
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // 5. Expiry Date
               const Text('📅 Expiry Date', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
               const SizedBox(height: 8),
               GestureDetector(
