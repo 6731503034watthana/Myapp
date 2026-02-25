@@ -79,22 +79,32 @@ class _AddItemFormScreenState extends State<AddItemFormScreen> {
 
     setState(() => _isSaving = true);
 
-    final newItem = FoodItem(
-      id: const Uuid().v4(),
-      name: name,
-      category: _selectedCategory,
-      emoji: _selectedCategory.emoji,
-      purchaseDate: DateTime.now(),
-      expiryDate: _expiryDate,
-    );
-
-    await context.read<FoodItemsProvider>().addItem(newItem, imageFile: _imageFile);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('✅ $name added to pantry!', style: const TextStyle(fontSize: 16)), backgroundColor: AppColors.safe),
+    try {
+      final newItem = FoodItem(
+        id: const Uuid().v4(),
+        name: name,
+        category: _selectedCategory,
+        emoji: _selectedCategory.emoji,
+        purchaseDate: DateTime.now(),
+        expiryDate: _expiryDate,
       );
-      context.go(AppRoutes.dashboard);
+
+      await context.read<FoodItemsProvider>().addItem(newItem, imageFile: _imageFile);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('✅ $name added to pantry!', style: const TextStyle(fontSize: 16)), backgroundColor: AppColors.safe),
+        );
+        context.go(AppRoutes.dashboard);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save: ${e.toString()}'), backgroundColor: AppColors.expired),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -137,12 +147,28 @@ class _AddItemFormScreenState extends State<AddItemFormScreen> {
               if (_imageFile != null)
                 Stack(
                   children: [
-                    Container(
-                      width: double.infinity,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        image: DecorationImage(image: FileImage(_imageFile!), fit: BoxFit.cover),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.file(
+                        _imageFile!,
+                        width: double.infinity,
+                        height: 200,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          width: double.infinity,
+                          height: 200,
+                          color: Colors.grey[200],
+                          child: const Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                                SizedBox(height: 8),
+                                Text('Cannot load image', style: TextStyle(color: Colors.grey)),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                     Positioned(

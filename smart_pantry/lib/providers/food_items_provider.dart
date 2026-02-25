@@ -109,7 +109,11 @@ class FoodItemsProvider extends ChangeNotifier {
 
     String? imageUrl;
     if (imageFile != null) {
-      imageUrl = await _firestoreService.uploadImage(_userId!, item.id, imageFile);
+      try {
+        imageUrl = await _firestoreService.uploadImage(_userId!, item.id, imageFile);
+      } catch (_) {
+        // Image upload failed — save item without image
+      }
     }
 
     final itemToSave = FoodItem(
