@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:smart_pantry/services/firestore_service.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class AuthProvider extends ChangeNotifier {
   final fb.FirebaseAuth _auth = fb.FirebaseAuth.instance;
@@ -20,7 +21,6 @@ class AuthProvider extends ChangeNotifier {
   String get displayName => _user?.displayName ?? _user?.email ?? 'User';
 
   AuthProvider() {
-    // Listen Firebase auth state
     _auth.authStateChanges().listen((fb.User? user) {
       _user = user;
       notifyListeners();
@@ -55,12 +55,10 @@ class AuthProvider extends ChangeNotifier {
         email: email,
         password: password,
       );
-      // ตั้งชื่อ
       await credential.user?.updateDisplayName(name);
       await credential.user?.reload();
       _user = _auth.currentUser;
 
-      // สร้าง default categories ให้ user ใหม่
       if (_user != null) {
         await _firestoreService.initDefaultCategories(_user!.uid);
       }
@@ -82,31 +80,46 @@ class AuthProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        _isLoading = false;
-        notifyListeners();
-        return false; // ผู้ใช้ยกเลิก
+      if (kIsWeb) {
+        // Flutter Web
+        final googleProvider = fb.GoogleAuthProvider();
+        final userCredential = await _auth.signInWithPopup(googleProvider);
+
+        if (userCredential.additionalUserInfo?.isNewUser == true && 
+            userCredential.user != null) {
+          await _firestoreService.initDefaultCategories(userCredential.user!.uid);
+        }
+      } else {
+        // iOS/Android
+        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+        
+        if (googleUser == null) {
+          _isLoading = false;
+          notifyListeners();
+          return false;
+        }
+
+        final GoogleSignInAuthentication googleAuth = 
+            await googleUser.authentication;
+        
+        final credential = fb.GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        final userCredential = await _auth.signInWithCredential(credential);
+
+        if (userCredential.additionalUserInfo?.isNewUser == true && 
+            userCredential.user != null) {
+          await _firestoreService.initDefaultCategories(userCredential.user!.uid);
+        }
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final credential = fb.GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final userCredential = await _auth.signInWithCredential(credential);
-
-      // ถ้าเป็น user ใหม่ สร้าง default categories
-     // ถ้าเป็น user ใหม่ สร้าง default categories
-      if (userCredential.additionalUserInfo?.isNewUser == true && userCredential.user != null) {
-      await _firestoreService.initDefaultCategories(userCredential.user!.uid);
-      }
       _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      _error = 'Google Sign-In failed. Please try again.';
+      _error = 'Google Sign-In failed: ${e.toString()}';
       _isLoading = false;
       notifyListeners();
       return false;
@@ -115,10 +128,17 @@ class AuthProvider extends ChangeNotifier {
 
   // ===== Logout =====
   Future<void> logout() async {
-    await _googleSignIn.signOut();
-    await _auth.signOut();
-    _user = null;
-    notifyListeners();
+    try {
+      if (!kIsWeb) {
+        await _googleSignIn.signOut();
+      }
+      await _auth.signOut();
+      _user = null;
+      notifyListeners();
+    } catch (e) {
+      _error = 'Logout failed: ${e.toString()}';
+      notifyListeners();
+    }
   }
 
   void clearError() {
@@ -145,3 +165,5 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 }
+
+
