@@ -32,7 +32,7 @@ class FoodItemCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 image: item.imageUrl != null
                     ? DecorationImage(
-                        image: NetworkImage(item.imageUrl!),
+                        image: NetworkImage(item.imageUrl!),  // <-- Firebase Storage URL
                         fit: BoxFit.cover,
                       )
                     : null,

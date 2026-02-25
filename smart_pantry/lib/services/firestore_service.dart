@@ -12,7 +12,6 @@ class FirestoreService {
   //  CATEGORIES
   // ============================================================
 
-  /// ดึง categories ของ user
   Stream<List<FoodCategory>> getCategories(String userId) {
     return _db
         .collection('users')
@@ -23,7 +22,6 @@ class FirestoreService {
             snapshot.docs.map((doc) => FoodCategory.fromMap(doc.data())).toList());
   }
 
-  /// ดึง categories แบบครั้งเดียว
   Future<List<FoodCategory>> getCategoriesOnce(String userId) async {
     final snapshot = await _db
         .collection('users')
@@ -33,7 +31,6 @@ class FirestoreService {
     return snapshot.docs.map((doc) => FoodCategory.fromMap(doc.data())).toList();
   }
 
-  /// เพิ่ม category ใหม่
   Future<void> addCategory(String userId, FoodCategory category) async {
     await _db
         .collection('users')
@@ -43,7 +40,6 @@ class FirestoreService {
         .set(category.toMap());
   }
 
-  /// ลบ category
   Future<void> deleteCategory(String userId, String categoryId) async {
     await _db
         .collection('users')
@@ -53,7 +49,6 @@ class FirestoreService {
         .delete();
   }
 
-  /// สร้าง default categories ให้ user ใหม่
   Future<void> initDefaultCategories(String userId) async {
     final existing = await getCategoriesOnce(userId);
     if (existing.isEmpty) {
@@ -74,7 +69,6 @@ class FirestoreService {
   //  FOOD ITEMS
   // ============================================================
 
-  /// ดึง food items ของ user (stream)
   Stream<List<Map<String, dynamic>>> getFoodItemsRaw(String userId) {
     return _db
         .collection('users')
@@ -84,7 +78,6 @@ class FirestoreService {
         .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
   }
 
-  /// เพิ่ม food item
   Future<void> addFoodItem(String userId, FoodItem item) async {
     await _db
         .collection('users')
@@ -94,7 +87,6 @@ class FirestoreService {
         .set(item.toMap());
   }
 
-  /// อัปเดต food item
   Future<void> updateFoodItem(String userId, String itemId, Map<String, dynamic> data) async {
     await _db
         .collection('users')
@@ -104,7 +96,6 @@ class FirestoreService {
         .update(data);
   }
 
-  /// ลบ food item
   Future<void> deleteFoodItem(String userId, String itemId) async {
     await _db
         .collection('users')
@@ -114,7 +105,6 @@ class FirestoreService {
         .delete();
   }
 
-  /// ลบ food items ทั้งหมด (Reset Pantry)
   Future<void> deleteAllFoodItems(String userId) async {
     final snapshot = await _db
         .collection('users')
@@ -129,7 +119,7 @@ class FirestoreService {
   }
 
   // ============================================================
-  //  IMAGE UPLOAD
+  //  IMAGE UPLOAD  <-- ส่วนที่เพิ่มใหม่
   // ============================================================
 
   /// อัปโหลดรูปภาพไปยัง Firebase Storage

@@ -12,14 +12,12 @@ class FoodItemsProvider extends ChangeNotifier {
   FoodCategory? _selectedCategory;
   StreamSubscription? _subscription;
   String? _userId;
-  List<FoodCategory> _categories = []; // เก็บไว้ map categoryId -> FoodCategory
+  List<FoodCategory> _categories = [];
 
-  // Basic Getters
   List<FoodItem> get items => _items;
   bool get isLoading => _isLoading;
   FoodCategory? get selectedCategory => _selectedCategory;
 
-  // -- Dashboard Getters --
   List<FoodItem> get activeItems {
     final active = _items.where((i) => !i.isConsumed && !i.isDiscarded).toList();
     active.sort((a, b) => a.expiryDate.compareTo(b.expiryDate));
@@ -30,7 +28,6 @@ class FoodItemsProvider extends ChangeNotifier {
   int get warningCount => activeItems.where((i) => i.status == FoodStatus.warning).length;
   int get expiredCount => activeItems.where((i) => i.status == FoodStatus.expired).length;
 
-  // -- Categories Getters --
   List<FoodItem> get filteredItems {
     if (_selectedCategory == null) return activeItems;
     return activeItems.where((i) => i.category.id == _selectedCategory!.id).toList();
@@ -40,18 +37,15 @@ class FoodItemsProvider extends ChangeNotifier {
     return activeItems.where((i) => i.category.id == category.id).length;
   }
 
-  // -- Stats Getters --
   int get totalTracked => _items.length;
   int get totalConsumed => _items.where((i) => i.isConsumed).length;
   int get totalDiscarded => _items.where((i) => i.isDiscarded).length;
 
-  // ===== เริ่มฟัง Firestore =====
   void listenToItems(String userId, List<FoodCategory> categories) {
     _userId = userId;
     _categories = categories;
     _isLoading = true;
     notifyListeners();
-
     _subscription?.cancel();
     _subscription = _firestoreService.getFoodItemsRaw(userId).listen((rawItems) {
       _items = rawItems.map((map) {
@@ -60,7 +54,6 @@ class FoodItemsProvider extends ChangeNotifier {
         try {
           category = _categories.firstWhere((c) => c.id == catId);
         } catch (_) {
-          // ถ้าหา category ไม่เจอ ใช้ default
           category = FoodCategory(id: catId, label: catId, emoji: '📦', color: const Color(0xFF9E9E9E));
         }
         return FoodItem.fromMap(map, category);
@@ -70,10 +63,8 @@ class FoodItemsProvider extends ChangeNotifier {
     });
   }
 
-  /// อัปเดต categories list (เรียกเมื่อ categories เปลี่ยน)
   void updateCategories(List<FoodCategory> categories) {
     _categories = categories;
-    // Re-map items with updated categories
     if (_userId != null) {
       final updatedItems = _items.map((item) {
         try {
@@ -86,9 +77,7 @@ class FoodItemsProvider extends ChangeNotifier {
             isDiscarded: item.isDiscarded, consumedDate: item.consumedDate,
             discardedDate: item.discardedDate,
           );
-        } catch (_) {
-          return item;
-        }
+        } catch (_) { return item; }
       }).toList();
       _items = updatedItems;
       notifyListeners();
@@ -109,7 +98,11 @@ class FoodItemsProvider extends ChangeNotifier {
 
     String? imageUrl;
     if (imageFile != null) {
-      imageUrl = await _firestoreService.uploadImage(_userId!, item.id, imageFile);
+      try {
+        imageUrl = await _firestoreService.uploadImage(_userId!, item.id, imageFile);
+      } catch (_) {
+        // Image upload failed — save item without image
+      }
     }
 
     final itemToSave = FoodItem(
@@ -151,6 +144,24 @@ class FoodItemsProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> updateQuantity(String id, int quantity, String unit) async {
+    if (_userId == null) return;
+    final index = _items.indexWhere((i) => i.id == id);
+    if (index != -1) {
+      final item = _items[index];
+      _items[index] = FoodItem(
+        id: item.id, name: item.name, category: item.category,
+        emoji: item.emoji, purchaseDate: item.purchaseDate,
+        expiryDate: item.expiryDate, quantity: quantity,
+        unit: unit, notes: item.notes, imageUrl: item.imageUrl,
+        isConsumed: item.isConsumed, isDiscarded: item.isDiscarded,
+        consumedDate: item.consumedDate, discardedDate: item.discardedDate,
+      );
+      notifyListeners();
+      await _firestoreService.updateFoodItem(_userId!, id, {'quantity': quantity, 'unit': unit});
+    }
+  }
+
   Future<void> updateItemImage(String itemId, File imageFile) async {
     if (_userId == null) return;
     final imageUrl = await _firestoreService.uploadImage(_userId!, itemId, imageFile);
@@ -168,7 +179,6 @@ class FoodItemsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Reset Pantry: ลบข้อมูลทั้งหมด
   Future<void> resetPantry() async {
     if (_userId == null) return;
     await _firestoreService.deleteAllFoodItems(_userId!);

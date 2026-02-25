@@ -11,6 +11,71 @@ import '../../../core/widgets/action_button.dart';
 import '../../../core/widgets/status_badge.dart';
 import '../../../providers/food_items_provider.dart';
 
+const List<String> _unitOptions = ['unit', 'pack', 'box', 'bag', 'kg', 'g', 'L', 'mL', 'piece'];
+
+void _showQuantityEditor(BuildContext context, FoodItem item, FoodItemsProvider provider) {
+  int tempQty = item.quantity;
+  String tempUnit = _unitOptions.contains(item.unit) ? item.unit : 'unit';
+  showDialog(
+    context: context,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setDlgState) => AlertDialog(
+        title: const Text('Edit Quantity', style: TextStyle(fontWeight: FontWeight.w700)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  onPressed: tempQty > 1 ? () => setDlgState(() => tempQty--) : null,
+                  icon: const Icon(Icons.remove_circle_outline, size: 36),
+                  color: AppColors.primary,
+                ),
+                SizedBox(
+                  width: 72,
+                  child: Text('$tempQty', textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                ),
+                IconButton(
+                  onPressed: tempQty < 999 ? () => setDlgState(() => tempQty++) : null,
+                  icon: const Icon(Icons.add_circle_outline, size: 36),
+                  color: AppColors.primary,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: tempUnit, isExpanded: true,
+                  style: const TextStyle(fontSize: 16, color: AppColors.textPrimary),
+                  items: _unitOptions.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
+                  onChanged: (val) { if (val != null) setDlgState(() => tempUnit = val); },
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () { provider.updateQuantity(item.id, tempQty, tempUnit); Navigator.pop(ctx); },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            child: const Text('Save', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 class ItemDetailScreen extends StatelessWidget {
   final String itemId;
   const ItemDetailScreen({super.key, required this.itemId});
@@ -31,9 +96,7 @@ class ItemDetailScreen extends StatelessWidget {
           ),
           body: SingleChildScrollView(
             child: Column(children: [
-              // Image or Emoji display
               _ItemImage(item: item, provider: provider),
-
               Padding(
                 padding: const EdgeInsets.all(AppTheme.spacingMD),
                 child: Column(
@@ -47,17 +110,16 @@ class ItemDetailScreen extends StatelessWidget {
                         color: item.category.color.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Text(
-                        '${item.category.emoji} ${item.category.label}',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: item.category.color),
-                      ),
+                      child: Text('${item.category.emoji} ${item.category.label}',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: item.category.color)),
                     ),
                     const SizedBox(height: 20),
                     _DetailCard(icon: '📅', label: 'Expiry Date', value: DateFormat('MMM dd, yyyy').format(item.expiryDate)),
                     const SizedBox(height: 10),
                     _DetailCard(icon: '⏳', label: 'Days Remaining', value: item.daysRemainingText, valueColor: item.status.color),
                     const SizedBox(height: 10),
-                    _DetailCard(icon: '📦', label: 'Quantity', value: '${item.quantity} ${item.unit}'),
+                    _DetailCard(icon: '📦', label: 'Quantity', value: '${item.quantity} ${item.unit}',
+                      onTap: () => _showQuantityEditor(context, item, provider)),
                     const SizedBox(height: 10),
                     Row(children: [
                       const Text('Status: ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
@@ -68,31 +130,23 @@ class ItemDetailScreen extends StatelessWidget {
                       Text('📝 ${item.notes}', style: TextStyle(fontSize: 15, color: Colors.grey[600])),
                     ],
                     const SizedBox(height: 32),
-                    ActionButton(
-                      label: 'Consumed',
-                      emoji: '🍽️',
-                      color: AppColors.safe,
+                    ActionButton(label: 'Consumed', emoji: '🍽️', color: AppColors.safe,
                       onPressed: () {
                         provider.consumeItem(item.id);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('✅ Marked as consumed!', style: TextStyle(fontSize: 16)), backgroundColor: AppColors.safe),
-                        );
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('✅ Marked as consumed!', style: TextStyle(fontSize: 16)),
+                          backgroundColor: AppColors.safe));
                         context.pop();
-                      },
-                    ),
+                      }),
                     const SizedBox(height: 12),
-                    ActionButton(
-                      label: 'Discarded',
-                      emoji: '🗑️',
-                      color: AppColors.expired,
+                    ActionButton(label: 'Discarded', emoji: '🗑️', color: AppColors.expired,
                       onPressed: () {
                         provider.discardItem(item.id);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('🗑️ Marked as discarded', style: TextStyle(fontSize: 16)), backgroundColor: AppColors.expired),
-                        );
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('🗑️ Marked as discarded', style: TextStyle(fontSize: 16)),
+                          backgroundColor: AppColors.expired));
                         context.pop();
-                      },
-                    ),
+                      }),
                   ],
                 ),
               ),
@@ -114,33 +168,24 @@ class _ItemImage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // รูปภาพหรือ emoji
         Container(
           width: double.infinity,
           height: 200,
           color: item.status.backgroundColor,
           child: item.imageUrl != null
-              ? Image.network(item.imageUrl!, fit: BoxFit.cover,
+              ? Image.network(item.imageUrl!, fit: BoxFit.cover,  // <-- Firebase Storage URL
                   errorBuilder: (_, __, ___) => Center(child: Text(item.emoji, style: const TextStyle(fontSize: 100))))
               : Center(child: Text(item.emoji, style: const TextStyle(fontSize: 100))),
         ),
-        // ปุ่ม Retake / Take Photo
         Positioned(
-          bottom: 10,
-          right: 10,
+          bottom: 10, right: 10,
           child: Row(
             children: [
-              _PhotoButton(
-                icon: Icons.camera_alt,
-                label: 'Retake',
-                onTap: () => _retakePhoto(context, ImageSource.camera),
-              ),
+              _PhotoButton(icon: Icons.camera_alt, label: 'Retake',
+                onTap: () => _retakePhoto(context, ImageSource.camera)),
               const SizedBox(width: 8),
-              _PhotoButton(
-                icon: Icons.upload_file,
-                label: 'Upload',
-                onTap: () => _retakePhoto(context, ImageSource.gallery),
-              ),
+              _PhotoButton(icon: Icons.upload_file, label: 'Upload',
+                onTap: () => _retakePhoto(context, ImageSource.gallery)),
             ],
           ),
         ),
@@ -155,9 +200,9 @@ class _ItemImage extends StatelessWidget {
       final file = File(photo.path);
       await provider.updateItemImage(item.id, file);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('📷 Photo updated!', style: TextStyle(fontSize: 16)), backgroundColor: AppColors.safe),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('📷 Photo updated!', style: TextStyle(fontSize: 16)),
+          backgroundColor: AppColors.safe));
       }
     }
   }
@@ -175,10 +220,7 @@ class _PhotoButton extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.black54,
-          borderRadius: BorderRadius.circular(20),
-        ),
+        decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20)),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -197,11 +239,12 @@ class _DetailCard extends StatelessWidget {
   final String label;
   final String value;
   final Color? valueColor;
-  const _DetailCard({required this.icon, required this.label, required this.value, this.valueColor});
+  final VoidCallback? onTap;
+  const _DetailCard({required this.icon, required this.label, required this.value, this.valueColor, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final card = Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -211,11 +254,18 @@ class _DetailCard extends StatelessWidget {
       child: Row(children: [
         Text(icon, style: const TextStyle(fontSize: 22)),
         const SizedBox(width: 12),
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[500])),
-          Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: valueColor ?? AppColors.textPrimary)),
-        ]),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[500])),
+            Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: valueColor ?? AppColors.textPrimary)),
+          ]),
+        ),
+        if (onTap != null) const Icon(Icons.edit_outlined, size: 18, color: AppColors.primary),
       ]),
     );
+    if (onTap != null) {
+      return InkWell(onTap: onTap, borderRadius: BorderRadius.circular(12), child: card);
+    }
+    return card;
   }
 }

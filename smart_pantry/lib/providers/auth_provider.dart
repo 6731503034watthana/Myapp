@@ -6,7 +6,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 class AuthProvider extends ChangeNotifier {
   final fb.FirebaseAuth _auth = fb.FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  // ✅ แก้ไข: ใช้ GoogleSignIn.instance (ไม่มีวงเล็บ)
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
   final FirestoreService _firestoreService = FirestoreService();
 
   fb.User? _user;
@@ -91,7 +92,9 @@ class AuthProvider extends ChangeNotifier {
         }
       } else {
         // iOS/Android
-        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+        // ✅ แก้ไข: อัปเดตโครงสร้างตามแพ็กเกจเวอร์ชัน 7.x
+        await _googleSignIn.initialize();
+        final GoogleSignInAccount? googleUser = await _googleSignIn.authenticate();
         
         if (googleUser == null) {
           _isLoading = false;
@@ -99,11 +102,11 @@ class AuthProvider extends ChangeNotifier {
           return false;
         }
 
-        final GoogleSignInAuthentication googleAuth = 
-            await googleUser.authentication;
+        // ✅ แก้ไข: ไม่ต้องใช้ await แล้ว
+        final GoogleSignInAuthentication googleAuth = googleUser.authentication;
         
+        // ✅ แก้ไข: ลบ accessToken ออก
         final credential = fb.GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
           idToken: googleAuth.idToken,
         );
 
@@ -165,5 +168,3 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 }
-
-
