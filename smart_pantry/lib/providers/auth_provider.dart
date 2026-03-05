@@ -77,11 +77,19 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // ===== Login ด้วย Google =====
+  // หมายเหตุ: ต้องตั้งค่า Firebase Console ก่อนใช้งาน:
+  // 1. Firebase Console → Authentication → Sign-in method → เปิดใช้ Google
+  // 2. Firebase Console → Project Settings → เพิ่ม SHA-1 fingerprint
+  //    (ได้จาก: keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android)
+  // 3. ดาวน์โหลด google-services.json ใหม่แล้ววางที่ android/app/
   Future<bool> loginWithGoogle() async {
     _isLoading = true;
     _error = null;
     notifyListeners();
     try {
+      // ล้าง session เก่าก่อน sign in ใหม่ เพื่อป้องกันปัญหา cached credentials
+      await _googleSignIn.signOut();
+
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         _isLoading = false;
@@ -98,15 +106,30 @@ class AuthProvider extends ChangeNotifier {
       final userCredential = await _auth.signInWithCredential(credential);
 
       // ถ้าเป็น user ใหม่ สร้าง default categories
-     // ถ้าเป็น user ใหม่ สร้าง default categories
       if (userCredential.additionalUserInfo?.isNewUser == true && userCredential.user != null) {
-      await _firestoreService.initDefaultCategories(userCredential.user!.uid);
+        await _firestoreService.initDefaultCategories(userCredential.user!.uid);
       }
       _isLoading = false;
       notifyListeners();
       return true;
+    } on fb.FirebaseAuthException catch (e) {
+      _error = _mapAuthError(e.code);
+      _isLoading = false;
+      notifyListeners();
+      return false;
     } catch (e) {
-      _error = 'Google Sign-In failed. Please try again.';
+      // แสดง error ที่ชัดเจนมากขึ้น เพื่อ debug ง่าย
+      if (e.toString().contains('sign_in_canceled')) {
+        _error = null; // ผู้ใช้ยกเลิกเอง ไม่ต้องแสดง error
+      } else if (e.toString().contains('network_error')) {
+        _error = 'Network error. Please check your connection.';
+      } else if (e.toString().contains('ApiException: 10')) {
+        _error = 'Google Sign-In configuration error. Please check SHA-1 fingerprint in Firebase Console.';
+      } else if (e.toString().contains('ApiException: 12500')) {
+        _error = 'Google Sign-In failed. Please update Google Play Services.';
+      } else {
+        _error = 'Google Sign-In failed: ${e.toString()}';
+      }
       _isLoading = false;
       notifyListeners();
       return false;

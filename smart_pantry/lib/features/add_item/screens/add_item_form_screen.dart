@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -23,12 +24,12 @@ class AddItemFormScreen extends StatefulWidget {
 
 class _AddItemFormScreenState extends State<AddItemFormScreen> {
   final _nameController = TextEditingController();
+  final _quantityController = TextEditingController(text: '1');
   late FoodCategory _selectedCategory;
   DateTime _expiryDate = DateTime.now().add(const Duration(days: 7));
   File? _imageFile;
   final _picker = ImagePicker();
   bool _isSaving = false;
-  int _quantity = 1;
   String _selectedUnit = 'unit';
 
   static const List<String> _unitOptions = ['unit', 'pack', 'box', 'bag', 'kg', 'g', 'L', 'mL', 'piece'];
@@ -42,6 +43,7 @@ class _AddItemFormScreenState extends State<AddItemFormScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _quantityController.dispose();
     super.dispose();
   }
 
@@ -81,6 +83,22 @@ class _AddItemFormScreenState extends State<AddItemFormScreen> {
       return;
     }
 
+    // ตรวจสอบว่าชื่อไม่ใช่ตัวเลขล้วน
+    if (RegExp(r'^[0-9]+$').hasMatch(name)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Food name must contain text, not only numbers'), backgroundColor: AppColors.warning),
+      );
+      return;
+    }
+
+    final quantity = int.tryParse(_quantityController.text) ?? 1;
+    if (quantity < 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Quantity must be at least 1'), backgroundColor: AppColors.warning),
+      );
+      return;
+    }
+
     setState(() => _isSaving = true);
 
     try {
@@ -91,7 +109,7 @@ class _AddItemFormScreenState extends State<AddItemFormScreen> {
         emoji: _selectedCategory.emoji,
         purchaseDate: DateTime.now(),
         expiryDate: _expiryDate,
-        quantity: _quantity,
+        quantity: quantity,
         unit: _selectedUnit,
       );
 
@@ -263,35 +281,21 @@ class _AddItemFormScreenState extends State<AddItemFormScreen> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  // Stepper
+                  // TextField สำหรับพิมพ์จำนวน
                   Expanded(
                     flex: 5,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: Row(
-                        children: [
-                          IconButton(
-                            onPressed: _quantity > 1 ? () => setState(() => _quantity--) : null,
-                            icon: const Icon(Icons.remove),
-                            color: AppColors.primary,
-                          ),
-                          Expanded(
-                            child: Text(
-                              '$_quantity',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: _quantity < 999 ? () => setState(() => _quantity++) : null,
-                            icon: const Icon(Icons.add),
-                            color: AppColors.primary,
-                          ),
-                        ],
+                    child: TextField(
+                      controller: _quantityController,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                      decoration: InputDecoration(
+                        hintText: 'e.g. 1000',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       ),
                     ),
                   ),

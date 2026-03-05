@@ -155,6 +155,24 @@ class FoodItemsProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> updateName(String id, String newName) async {
+    if (_userId == null) return;
+    final index = _items.indexWhere((i) => i.id == id);
+    if (index != -1) {
+      final item = _items[index];
+      _items[index] = FoodItem(
+        id: item.id, name: newName, category: item.category,
+        emoji: item.emoji, purchaseDate: item.purchaseDate,
+        expiryDate: item.expiryDate, quantity: item.quantity,
+        unit: item.unit, notes: item.notes, imageUrl: item.imageUrl,
+        isConsumed: item.isConsumed, isDiscarded: item.isDiscarded,
+        consumedDate: item.consumedDate, discardedDate: item.discardedDate,
+      );
+      notifyListeners();
+      await _firestoreService.updateFoodItem(_userId!, id, {'name': newName});
+    }
+  }
+
   Future<void> updateQuantity(String id, int quantity, String unit) async {
     if (_userId == null) return;
     final index = _items.indexWhere((i) => i.id == id);

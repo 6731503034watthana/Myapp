@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -14,8 +15,8 @@ import '../../../providers/food_items_provider.dart';
 const List<String> _unitOptions = ['unit', 'pack', 'box', 'bag', 'kg', 'g', 'L', 'mL', 'piece'];
 
 void _showQuantityEditor(BuildContext context, FoodItem item, FoodItemsProvider provider) {
-  int tempQty = item.quantity;
   String tempUnit = _unitOptions.contains(item.unit) ? item.unit : 'unit';
+  final qtyController = TextEditingController(text: '${item.quantity}');
 
   showDialog(
     context: context,
@@ -25,29 +26,20 @@ void _showQuantityEditor(BuildContext context, FoodItem item, FoodItemsProvider 
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Stepper
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  onPressed: tempQty > 1 ? () => setDlgState(() => tempQty--) : null,
-                  icon: const Icon(Icons.remove_circle_outline, size: 36),
-                  color: AppColors.primary,
-                ),
-                SizedBox(
-                  width: 72,
-                  child: Text(
-                    '$tempQty',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
-                  ),
-                ),
-                IconButton(
-                  onPressed: tempQty < 999 ? () => setDlgState(() => tempQty++) : null,
-                  icon: const Icon(Icons.add_circle_outline, size: 36),
-                  color: AppColors.primary,
-                ),
-              ],
+            // TextField สำหรับพิมพ์ตัวเลขได้เลย
+            TextField(
+              controller: qtyController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+              decoration: InputDecoration(
+                hintText: 'Enter quantity',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor: Colors.grey[100],
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              ),
             ),
             const SizedBox(height: 12),
             // Unit Dropdown
@@ -81,7 +73,14 @@ void _showQuantityEditor(BuildContext context, FoodItem item, FoodItemsProvider 
           ),
           ElevatedButton(
             onPressed: () {
-              provider.updateQuantity(item.id, tempQty, tempUnit);
+              final qty = int.tryParse(qtyController.text) ?? item.quantity;
+              if (qty < 1) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Quantity must be at least 1'), backgroundColor: AppColors.warning),
+                );
+                return;
+              }
+              provider.updateQuantity(item.id, qty, tempUnit);
               Navigator.pop(ctx);
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
@@ -89,6 +88,60 @@ void _showQuantityEditor(BuildContext context, FoodItem item, FoodItemsProvider 
           ),
         ],
       ),
+    ),
+  );
+}
+
+void _showNameEditor(BuildContext context, FoodItem item, FoodItemsProvider provider) {
+  final nameController = TextEditingController(text: item.name);
+
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Edit Name', style: TextStyle(fontWeight: FontWeight.w700)),
+      content: TextField(
+        controller: nameController,
+        textCapitalization: TextCapitalization.words,
+        style: const TextStyle(fontSize: 18),
+        decoration: InputDecoration(
+          hintText: 'Enter food name',
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          filled: true,
+          fillColor: Colors.grey[100],
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            final newName = nameController.text.trim();
+            if (newName.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Please enter a food name'), backgroundColor: AppColors.warning),
+              );
+              return;
+            }
+            // ตรวจสอบว่าชื่อไม่ใช่ตัวเลขล้วน
+            if (RegExp(r'^[0-9]+$').hasMatch(newName)) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Food name cannot be only numbers'), backgroundColor: AppColors.warning),
+              );
+              return;
+            }
+            provider.updateName(item.id, newName);
+            Navigator.pop(ctx);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Name updated to "$newName"'), backgroundColor: AppColors.safe),
+            );
+          },
+          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+          child: const Text('Save', style: TextStyle(color: Colors.white)),
+        ),
+      ],
     ),
   );
 }
@@ -121,7 +174,18 @@ class ItemDetailScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(item.name, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(item.name, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                        ),
+                        IconButton(
+                          onPressed: () => _showNameEditor(context, item, provider),
+                          icon: const Icon(Icons.edit, size: 22, color: AppColors.primary),
+                          tooltip: 'Edit name',
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
