@@ -5,7 +5,10 @@ import 'package:smart_pantry/services/firestore_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final fb.FirebaseAuth _auth = fb.FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  
+  // อัปเดต: ใช้ GoogleSignIn.instance สำหรับเวอร์ชัน 7.x ขึ้นไป
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  
   final FirestoreService _firestoreService = FirestoreService();
 
   fb.User? _user;
@@ -86,20 +89,31 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     _error = null;
     notifyListeners();
+    
     try {
+      // อัปเดต: เวอร์ชัน 7.x บังคับให้เรียก initialize() ก่อนใช้งานเสมอ
+      await _googleSignIn.initialize();
+
       // ล้าง session เก่าก่อน sign in ใหม่ เพื่อป้องกันปัญหา cached credentials
       await _googleSignIn.signOut();
 
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      // อัปเดต: เปลี่ยนจาก signIn() เป็น authenticate()
+      final GoogleSignInAccount? googleUser = await _googleSignIn.authenticate();
       if (googleUser == null) {
         _isLoading = false;
         notifyListeners();
         return false; // ผู้ใช้ยกเลิก
       }
 
+      // ดึง ID Token สำหรับระบุตัวตน
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      
+      // อัปเดต: ดึง Access Token โดยต้องขอสิทธิ์ Scope แยกต่างหากในเวอร์ชัน 7.x
+      final authorizedUser = await googleUser.authorizationClient.authorizeScopes(['email', 'profile']);
+
+      // นำ Token ทั้งสองตัวไปสร้าง Credential สำหรับ Firebase
       final credential = fb.GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
+        accessToken: authorizedUser.accessToken,
         idToken: googleAuth.idToken,
       );
 
@@ -109,9 +123,11 @@ class AuthProvider extends ChangeNotifier {
       if (userCredential.additionalUserInfo?.isNewUser == true && userCredential.user != null) {
         await _firestoreService.initDefaultCategories(userCredential.user!.uid);
       }
+      
       _isLoading = false;
       notifyListeners();
       return true;
+      
     } on fb.FirebaseAuthException catch (e) {
       _error = _mapAuthError(e.code);
       _isLoading = false;
@@ -119,7 +135,7 @@ class AuthProvider extends ChangeNotifier {
       return false;
     } catch (e) {
       // แสดง error ที่ชัดเจนมากขึ้น เพื่อ debug ง่าย
-      if (e.toString().contains('sign_in_canceled')) {
+      if (e.toString().contains('sign_in_canceled') || e.toString().contains('canceled')) {
         _error = null; // ผู้ใช้ยกเลิกเอง ไม่ต้องแสดง error
       } else if (e.toString().contains('network_error')) {
         _error = 'Network error. Please check your connection.';
@@ -138,6 +154,8 @@ class AuthProvider extends ChangeNotifier {
 
   // ===== Logout =====
   Future<void> logout() async {
+    // อัปเดต: กันแอปแครชในกรณีที่กด Logout โดยยังไม่เคย Login ด้วย Google ใน session นี้
+    await _googleSignIn.initialize(); 
     await _googleSignIn.signOut();
     await _auth.signOut();
     _user = null;
