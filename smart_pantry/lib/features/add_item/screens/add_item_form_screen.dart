@@ -28,6 +28,10 @@ class _AddItemFormScreenState extends State<AddItemFormScreen> {
   File? _imageFile;
   final _picker = ImagePicker();
   bool _isSaving = false;
+  int _quantity = 1;
+  String _selectedUnit = 'unit';
+
+  static const List<String> _unitOptions = ['unit', 'pack', 'box', 'bag', 'kg', 'g', 'L', 'mL', 'piece'];
 
   @override
   void initState() {
@@ -79,22 +83,34 @@ class _AddItemFormScreenState extends State<AddItemFormScreen> {
 
     setState(() => _isSaving = true);
 
-    final newItem = FoodItem(
-      id: const Uuid().v4(),
-      name: name,
-      category: _selectedCategory,
-      emoji: _selectedCategory.emoji,
-      purchaseDate: DateTime.now(),
-      expiryDate: _expiryDate,
-    );
-
-    await context.read<FoodItemsProvider>().addItem(newItem, imageFile: _imageFile);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('✅ $name added to pantry!', style: const TextStyle(fontSize: 16)), backgroundColor: AppColors.safe),
+    try {
+      final newItem = FoodItem(
+        id: const Uuid().v4(),
+        name: name,
+        category: _selectedCategory,
+        emoji: _selectedCategory.emoji,
+        purchaseDate: DateTime.now(),
+        expiryDate: _expiryDate,
+        quantity: _quantity,
+        unit: _selectedUnit,
       );
-      context.go(AppRoutes.dashboard);
+
+      await context.read<FoodItemsProvider>().addItem(newItem, imageFile: _imageFile);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('✅ $name added to pantry!', style: const TextStyle(fontSize: 16)), backgroundColor: AppColors.safe),
+        );
+        context.go(AppRoutes.dashboard);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save: ${e.toString()}'), backgroundColor: AppColors.expired),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -137,12 +153,28 @@ class _AddItemFormScreenState extends State<AddItemFormScreen> {
               if (_imageFile != null)
                 Stack(
                   children: [
-                    Container(
-                      width: double.infinity,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        image: DecorationImage(image: FileImage(_imageFile!), fit: BoxFit.cover),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.file(
+                        _imageFile!,
+                        width: double.infinity,
+                        height: 200,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          width: double.infinity,
+                          height: 200,
+                          color: Colors.grey[200],
+                          child: const Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                                SizedBox(height: 8),
+                                Text('Cannot load image', style: TextStyle(color: Colors.grey)),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                     Positioned(
@@ -226,7 +258,74 @@ class _AddItemFormScreenState extends State<AddItemFormScreen> {
               ),
               const SizedBox(height: 20),
 
-              // 4. Expiry Date
+              // 4. Quantity
+              const Text('📦 Quantity', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  // Stepper
+                  Expanded(
+                    flex: 5,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            onPressed: _quantity > 1 ? () => setState(() => _quantity--) : null,
+                            icon: const Icon(Icons.remove),
+                            color: AppColors.primary,
+                          ),
+                          Expanded(
+                            child: Text(
+                              '$_quantity',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: _quantity < 999 ? () => setState(() => _quantity++) : null,
+                            icon: const Icon(Icons.add),
+                            color: AppColors.primary,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // Unit Dropdown
+                  Expanded(
+                    flex: 5,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _selectedUnit,
+                          isExpanded: true,
+                          style: const TextStyle(fontSize: 16, color: AppColors.textPrimary),
+                          items: _unitOptions
+                              .map((u) => DropdownMenuItem(value: u, child: Text(u)))
+                              .toList(),
+                          onChanged: (val) {
+                            if (val != null) setState(() => _selectedUnit = val);
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // 5. Expiry Date
               const Text('📅 Expiry Date', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
               const SizedBox(height: 8),
               GestureDetector(

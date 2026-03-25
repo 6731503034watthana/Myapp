@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Pantry — สรุปโค้ดที่แก้ไข</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f5f7fa; color: #1a1a2e; font-size: 14px; }
+  .cover {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    color: white; min-height: 100vh; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; text-align: center; padding: 40px;
+    page-break-after: always;
+  }
+  .cover h1 { font-size: 42px; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
+  .cover .subtitle { font-size: 20px; opacity: 0.8; margin-bottom: 32px; }
+  .cover .badge {
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 50px; padding: 10px 28px; font-size: 15px; margin: 6px;
+    display: inline-block;
+  }
+  .cover .date { margin-top: 40px; opacity: 0.6; font-size: 13px; }
+  .toc {
+    background: white; margin: 32px; border-radius: 16px; padding: 32px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08); page-break-after: always;
+  }
+  .toc h2 { font-size: 22px; color: #0f3460; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; }
+  .toc-item {
+    display: flex; align-items: center; padding: 12px 16px; border-radius: 10px;
+    margin-bottom: 8px; background: #f8fafc; border-left: 4px solid #e2e8f0;
+    text-decoration: none; color: #1a1a2e;
+  }
+  .toc-item:hover { background: #eef2ff; }
+  .toc-item .num { font-weight: 800; color: #0f3460; margin-right: 14px; font-size: 16px; min-width: 28px; }
+  .toc-item .path { font-family: monospace; font-size: 13px; color: #475569; margin-top: 2px; }
+  .toc-item .title { font-weight: 600; font-size: 15px; }
+  .section {
+    background: white; margin: 32px; border-radius: 16px; padding: 32px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08); page-break-before: always;
+  }
+  .section-header {
+    display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px;
+    padding-bottom: 20px; border-bottom: 2px solid #e2e8f0;
+  }
+  .section-num {
+    background: #0f3460; color: white; width: 40px; height: 40px;
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 18px; flex-shrink: 0;
+  }
+  .section-meta h2 { font-size: 20px; color: #0f3460; margin-bottom: 4px; }
+  .section-meta .filepath {
+    font-family: monospace; font-size: 12px; background: #f1f5f9;
+    padding: 4px 10px; border-radius: 6px; color: #64748b; display: inline-block;
+  }
+  .change-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; padding: 4px 10px;
+    border-radius: 20px; margin-left: 8px;
+  }
+  .badge-add { background: #dcfce7; color: #166534; }
+  .badge-remove { background: #fee2e2; color: #991b1b; }
+  .badge-modify { background: #fef9c3; color: #854d0e; }
+  .change-summary {
+    background: #f8fafc; border-radius: 10px; padding: 16px 20px;
+    margin-bottom: 20px; border-left: 4px solid #0f3460;
+  }
+  .change-summary ul { padding-left: 20px; }
+  .change-summary li { margin-bottom: 6px; line-height: 1.6; }
+  .change-summary li strong { color: #0f3460; }
+  pre {
+    background: #0d1117; color: #e6edf3; border-radius: 12px;
+    padding: 20px; overflow-x: auto; font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 12px; line-height: 1.7; tab-size: 2;
+  }
+  .kw { color: #ff7b72; }       /* keywords */
+  .type { color: #79c0ff; }     /* types/classes */
+  .str { color: #a5d6ff; }      /* strings */
+  .fn { color: #d2a8ff; }       /* functions */
+  .cm { color: #8b949e; font-style: italic; } /* comments */
+  .hl { background: rgba(255,255,100,0.12); display: block; margin: 0 -20px; padding: 0 20px; } /* highlight */
+  .hl-add { background: rgba(0,255,100,0.08); display: block; margin: 0 -20px; padding: 0 20px; }
+  .hl-remove { background: rgba(255,0,0,0.08); display: block; margin: 0 -20px; padding: 0 20px; text-decoration: line-through; opacity: 0.5; }
+  .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin: 20px 0 8px; }
+  .diff-legend {
+    display: flex; gap: 16px; margin-bottom: 12px; font-size: 12px;
+  }
+  .diff-legend span { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+  .dot-add { background: rgba(0,255,100,0.3); border: 1px solid #16a34a; }
+  .dot-remove { background: rgba(255,0,0,0.2); border: 1px solid #dc2626; }
+  .dot-key { background: rgba(255,255,100,0.2); border: 1px solid #ca8a04; }
+  @media print {
+    body { background: white; }
+    .cover { min-height: auto; padding: 60px 40px; }
+    .section, .toc { margin: 0; border-radius: 0; box-shadow: none; padding: 24px 32px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<div class="cover">
+  <div style="font-size: 48px; margin-bottom: 16px;">🥬</div>
+  <h1>Smart Pantry</h1>
+  <div class="subtitle">สรุปโค้ดที่แก้ไขในโปรเจค</div>
+  <div>
+    <span class="badge">📁 5 ไฟล์ที่แก้ไข</span>
+    <span class="badge">🔥 Firebase Storage</span>
+    <span class="badge">Flutter / Dart</span>
+  </div>
+  <div class="date">วันที่ 25 กุมภาพันธ์ 2569 · branch: claude/user-flow-examples-IKwEm</div>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<div class="toc">
+  <h2>📋 สารบัญ — ไฟล์ที่แก้ไขทั้งหมด</h2>
+
+  <div class="toc-item">
+    <span class="num">1</span>
+    <div>
+      <div class="title">pubspec.yaml <span class="change-badge badge-add">+ firebase_storage</span></div>
+      <div class="path">smart_pantry/pubspec.yaml</div>
+    </div>
+  </div>
+
+  <div class="toc-item">
+    <span class="num">2</span>
+    <div>
+      <div class="title">FirestoreService <span class="change-badge badge-add">+ uploadImage / deleteImage</span></div>
+      <div class="path">lib/services/firestore_service.dart</div>
+    </div>
+  </div>
+
+  <div class="toc-item">
+    <span class="num">3</span>
+    <div>
+      <div class="title">FoodItemsProvider <span class="change-badge badge-modify">แก้ image logic</span></div>
+      <div class="path">lib/providers/food_items_provider.dart</div>
+    </div>
+  </div>
+
+  <div class="toc-item">
+    <span class="num">4</span>
+    <div>
+      <div class="title">FoodItemCard <span class="change-badge badge-modify">แสดงรูปจาก NetworkImage</span></div>
+      <div class="path">lib/features/dashboard/widgets/food_item_card.dart</div>
+    </div>
+  </div>
+
+  <div class="toc-item">
+    <span class="num">5</span>
+    <div>
+      <div class="title">ItemDetailScreen <span class="change-badge badge-modify">แสดงรูปจาก Image.network</span></div>
+      <div class="path">lib/features/item_detail/screens/item_detail_screen.dart</div>
+    </div>
+  </div>
+</div>
+
+<!-- FILE 1: pubspec.yaml -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">1</div>
+    <div class="section-meta">
+      <h2>pubspec.yaml</h2>
+      <span class="filepath">smart_pantry/pubspec.yaml</span>
+    </div>
+  </div>
+
+  <div class="change-summary">
+    <strong>สิ่งที่เปลี่ยน:</strong>
+    <ul>
+      <li>เพิ่ม <strong>firebase_storage: ^13.0.6</strong> เพื่อใช้งาน Firebase Storage สำหรับอัปโหลดรูปภาพ</li>
+      <li>ใช้ร่วมกับ <strong>image_picker</strong> ที่มีอยู่แล้วเพื่อถ่ายหรือเลือกรูปจาก Gallery</li>
+    </ul>
+  </div>
+
+  <div class="label">โค้ดส่วน dependencies (ที่เกี่ยวข้อง)</div>
+  <pre>dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  go_router: ^17.1.0
+  provider: ^6.1.5+1
+  intl: ^0.20.2
+  uuid: ^4.5.2
+  google_fonts: ^8.0.1
+  firebase_core: ^4.4.0
+
+  firebase_auth: ^6.1.4
+  google_sign_in: ^7.2.0
+  cloud_firestore: ^6.1.2
+<span class="hl-add">  firebase_storage: ^13.0.6     <span class="cm"># &lt;-- เพิ่มเพื่อรองรับ Image Upload</span></span>
+  image_picker: ^1.2.1</pre>
+</div>
+
+<!-- FILE 2: firestore_service.dart -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">2</div>
+    <div class="section-meta">
+      <h2>class FirestoreService</h2>
+      <span class="filepath">lib/services/firestore_service.dart</span>
+    </div>
+  </div>
+
+  <div class="change-summary">
+    <strong>สิ่งที่เปลี่ยน:</strong>
+    <ul>
+      <li>เพิ่ม <strong>import firebase_storage</strong> และ instance ของ <strong>FirebaseStorage</strong></li>
+      <li>เพิ่ม method <strong>uploadImage()</strong> — อัปโหลดรูปไป Firebase Storage แล้ว return download URL</li>
+      <li>เพิ่ม method <strong>deleteImage()</strong> — ลบรูปเมื่อ item ถูกลบ</li>
+    </ul>
+  </div>
+
+  <div class="label">โค้ดเต็ม — firestore_service.dart</div>
+  <pre><span class="hl-add"><span class="kw">import</span> <span class="str">'dart:io'</span>;</span>
+<span class="kw">import</span> <span class="str">'package:cloud_firestore/cloud_firestore.dart'</span>;
+<span class="hl-add"><span class="kw">import</span> <span class="str">'package:firebase_storage/firebase_storage.dart'</span>;</span>
+<span class="kw">import</span> <span class="str">'package:smart_pantry/models/food_category.dart'</span>;
+<span class="kw">import</span> <span class="str">'package:smart_pantry/models/food_item.dart'</span>;
+
+<span class="kw">class</span> <span class="type">FirestoreService</span> {
+  <span class="kw">final</span> <span class="type">FirebaseFirestore</span> _db = <span class="type">FirebaseFirestore</span>.instance;
+<span class="hl-add">  <span class="kw">final</span> <span class="type">FirebaseStorage</span> _storage = <span class="type">FirebaseStorage</span>.instance;</span>
+
+  <span class="cm">// ============================================================
+  //  CATEGORIES
+  // ============================================================</span>
+
+  <span class="type">Stream</span>&lt;<span class="type">List</span>&lt;<span class="type">FoodCategory</span>&gt;&gt; <span class="fn">getCategories</span>(<span class="type">String</span> userId) {
+    <span class="kw">return</span> _db
+        .collection(<span class="str">'users'</span>)
+        .doc(userId)
+        .collection(<span class="str">'categories'</span>)
+        .snapshots()
+        .map((snapshot) =&gt;
+            snapshot.docs.map((doc) =&gt; <span class="type">FoodCategory</span>.fromMap(doc.data())).toList());
+  }
+
+  <span class="type">Future</span>&lt;<span class="type">List</span>&lt;<span class="type">FoodCategory</span>&gt;&gt; <span class="fn">getCategoriesOnce</span>(<span class="type">String</span> userId) <span class="kw">async</span> {
+    <span class="kw">final</span> snapshot = <span class="kw">await</span> _db
+        .collection(<span class="str">'users'</span>)
+        .doc(userId)
+        .collection(<span class="str">'categories'</span>)
+        .get();
+    <span class="kw">return</span> snapshot.docs.map((doc) =&gt; <span class="type">FoodCategory</span>.fromMap(doc.data())).toList();
+  }
+
+  <span class="type">Future</span>&lt;<span class="kw">void</span>&gt; <span class="fn">addCategory</span>(<span class="type">String</span> userId, <span class="type">FoodCategory</span> category) <span class="kw">async</span> {
+    <span class="kw">await</span> _db
+        .collection(<span class="str">'users'</span>)
+        .doc(userId)
+        .collection(<span class="str">'categories'</span>)
+        .doc(category.id)
+        .set(category.toMap());
+  }
+
+  <span class="type">Future</span>&lt;<span class="kw">void</span>&gt; <span class="fn">deleteCategory</span>(<span class="type">String</span> userId, <span class="type">String</span> categoryId) <span class="kw">async</span> {
+    <span class="kw">await</span> _db
+        .collection(<span class="str">'users'</span>)
+        .doc(userId)
+        .collection(<span class="str">'categories'</span>)
+        .doc(categoryId)
+        .delete();
+  }
+
+  <span class="type">Future</span>&lt;<span class="kw">void</span>&gt; <span class="fn">initDefaultCategories</span>(<span class="type">String</span> userId) <span class="kw">async</span> {
+    <span class="kw">final</span> existing = <span class="kw">await</span> <span class="fn">getCategoriesOnce</span>(userId);
+    <span class="kw">if</span> (existing.isEmpty) {
+      <span class="kw">final</span> batch = _db.batch();
+      <span class="kw">for</span> (<span class="kw">final</span> cat <span class="kw">in</span> <span class="type">FoodCategory</span>.defaults) {
+        <span class="kw">final</span> ref = _db
+            .collection(<span class="str">'users'</span>)
+            .doc(userId)
+            .collection(<span class="str">'categories'</span>)
+            .doc(cat.id);
+        batch.set(ref, cat.toMap());
+      }
+      <span class="kw">await</span> batch.commit();
+    }
+  }
+
+  <span class="cm">// ============================================================
+  //  FOOD ITEMS
+  // ============================================================</span>
+
+  <span class="type">Stream</span>&lt;<span class="type">List</span>&lt;<span class="type">Map</span>&lt;<span class="type">String</span>, <span class="kw">dynamic</span>&gt;&gt;&gt; <span class="fn">getFoodItemsRaw</span>(<span class="type">String</span> userId) {
+    <span class="kw">return</span> _db
+        .collection(<span class="str">'users'</span>)
+        .doc(userId)
+        .collection(<span class="str">'items'</span>)
+        .snapshots()
+        .map((snapshot) =&gt; snapshot.docs.map((doc) =&gt; doc.data()).toList());
+  }
+
+  <span class="type">Future</span>&lt;<span class="kw">void</span>&gt; <span class="fn">addFoodItem</span>(<span class="type">String</span> userId, <span class="type">FoodItem</span> item) <span class="kw">async</span> {
+    <span class="kw">await</span> _db
+        .collection(<span class="str">'users'</span>)
+        .doc(userId)
+        .collection(<span class="str">'items'</span>)
+        .doc(item.id)
+        .set(item.toMap());
+  }
+
+  <span class="type">Future</span>&lt;<span class="kw">void</span>&gt; <span class="fn">updateFoodItem</span>(<span class="type">String</span> userId, <span class="type">String</span> itemId, <span class="type">Map</span>&lt;<span class="type">String</span>, <span class="kw">dynamic</span>&gt; data) <span class="kw">async</span> {
+    <span class="kw">await</span> _db
+        .collection(<span class="str">'users'</span>)
+        .doc(userId)
+        .collection(<span class="str">'items'</span>)
+        .doc(itemId)
+        .update(data);
+  }
+
+  <span class="type">Future</span>&lt;<span class="kw">void</span>&gt; <span class="fn">deleteFoodItem</span>(<span class="type">String</span> userId, <span class="type">String</span> itemId) <span class="kw">async</span> {
+    <span class="kw">await</span> _db
+        .collection(<span class="str">'users'</span>)
+        .doc(userId)
+        .collection(<span class="str">'items'</span>)
+        .doc(itemId)
+        .delete();
+  }
+
+  <span class="type">Future</span>&lt;<span class="kw">void</span>&gt; <span class="fn">deleteAllFoodItems</span>(<span class="type">String</span> userId) <span class="kw">async</span> {
+    <span class="kw">final</span> snapshot = <span class="kw">await</span> _db
+        .collection(<span class="str">'users'</span>)
+        .doc(userId)
+        .collection(<span class="str">'items'</span>)
+        .get();
+    <span class="kw">final</span> batch = _db.batch();
+    <span class="kw">for</span> (<span class="kw">final</span> doc <span class="kw">in</span> snapshot.docs) {
+      batch.delete(doc.reference);
+    }
+    <span class="kw">await</span> batch.commit();
+  }
+
+<span class="hl-add">  <span class="cm">// ============================================================
+  //  IMAGE UPLOAD  &lt;-- ส่วนที่เพิ่มใหม่
+  // ============================================================</span>
+
+  <span class="cm">/// อัปโหลดรูปภาพไปยัง Firebase Storage</span>
+  <span class="type">Future</span>&lt;<span class="type">String</span>&gt; <span class="fn">uploadImage</span>(<span class="type">String</span> userId, <span class="type">String</span> itemId, <span class="type">File</span> imageFile) <span class="kw">async</span> {
+    <span class="kw">final</span> ref = _storage.ref().child(<span class="str">'users/$userId/items/$itemId.jpg'</span>);
+    <span class="kw">await</span> ref.putFile(imageFile);
+    <span class="kw">return await</span> ref.getDownloadURL();
+  }
+
+  <span class="cm">/// ลบรูปภาพ</span>
+  <span class="type">Future</span>&lt;<span class="kw">void</span>&gt; <span class="fn">deleteImage</span>(<span class="type">String</span> userId, <span class="type">String</span> itemId) <span class="kw">async</span> {
+    <span class="kw">try</span> {
+      <span class="kw">final</span> ref = _storage.ref().child(<span class="str">'users/$userId/items/$itemId.jpg'</span>);
+      <span class="kw">await</span> ref.delete();
+    } <span class="kw">catch</span> (_) {
+      <span class="cm">// ไม่มีรูปก็ไม่ต้องทำอะไร</span>
+    }
+  }</span>
+}</pre>
+</div>
+
+<!-- FILE 3: food_items_provider.dart -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">3</div>
+    <div class="section-meta">
+      <h2>class FoodItemsProvider</h2>
+      <span class="filepath">lib/providers/food_items_provider.dart</span>
+    </div>
+  </div>
+
+  <div class="change-summary">
+    <strong>สิ่งที่เปลี่ยน:</strong>
+    <ul>
+      <li><strong>addItem()</strong> — เรียก <code>uploadImage()</code> จาก FirestoreService แล้วบันทึก URL ลง Firestore</li>
+      <li><strong>updateItemImage()</strong> — upload รูปใหม่ไป Firebase Storage แล้ว update Firestore</li>
+      <li><strong>removeItem()</strong> — ลบ item จาก Firestore พร้อมลบรูปจาก Firebase Storage ด้วย</li>
+    </ul>
+  </div>
+
+  <div class="label">โค้ดเต็ม — food_items_provider.dart</div>
+  <pre><span class="kw">import</span> <span class="str">'dart:async'</span>;
+<span class="kw">import</span> <span class="str">'dart:io'</span>;
+<span class="kw">import</span> <span class="str">'package:flutter/material.dart'</span>;
+<span class="kw">import</span> <span class="str">'package:smart_pantry/models/food_item.dart'</span>;
+<span class="kw">import</span> <span class="str">'package:smart_pantry/models/food_category.dart'</span>;
+<span class="kw">import</span> <span class="str">'package:smart_pantry/services/firestore_service.dart'</span>;
+
+<span class="kw">class</span> <span class="type">FoodItemsProvider</span> <span class="kw">extends</span> <span class="type">ChangeNotifier</span> {
+  <span class="kw">final</span> <span class="type">FirestoreService</span> _firestoreService = <span class="type">FirestoreService</span>();
+  <span class="type">List</span>&lt;<span class="type">FoodItem</span>&gt; _items = [];
+  <span class="kw">bool</span> _isLoading = <span class="kw">false</span>;
+  <span class="type">FoodCategory</span>? _selectedCategory;
+  <span class="type">StreamSubscription</span>? _subscription;
+  <span class="type">String</span>? _userId;
+  <span class="type">List</span>&lt;<span class="type">FoodCategory</span>&gt; _categories = [];
+
+  <span class="type">List</span>&lt;<span class="type">FoodItem</span>&gt; <span class="kw">get</span> items =&gt; _items;
+  <span class="kw">bool</span> <span class="kw">get</span> isLoading =&gt; _isLoading;
+  <span class="type">FoodCategory</span>? <span class="kw">get</span> selectedCategory =&gt; _selectedCategory;
+
+  <span class="type">List</span>&lt;<span class="type">FoodItem</span>&gt; <span class="kw">get</span> activeItems {
+    <span class="kw">final</span> active = _items.where((i) =&gt; !i.isConsumed &amp;&amp; !i.isDiscarded).toList();
+    active.sort((a, b) =&gt; a.expiryDate.compareTo(b.expiryDate));
+    <span class="kw">return</span> active;
+  }
+
+  <span class="kw">int</span> <span class="kw">get</span> safeCount =&gt; activeItems.where((i) =&gt; i.status == <span class="type">FoodStatus</span>.safe).length;
+  <span class="kw">int</span> <span class="kw">get</span> warningCount =&gt; activeItems.where((i) =&gt; i.status == <span class="type">FoodStatus</span>.warning).length;
+  <span class="kw">int</span> <span class="kw">get</span> expiredCount =&gt; activeItems.where((i) =&gt; i.status == <span class="type">FoodStatus</span>.expired).length;
+
+  <span class="type">List</span>&lt;<span class="type">FoodItem</span>&gt; <span class="kw">get</span> filteredItems {
+    <span class="kw">if</span> (_selectedCategory == <span class="kw">null</span>) <span class="kw">return</span> activeItems;
+    <span class="kw">return</span> activeItems.where((i) =&gt; i.category.id == _selectedCategory!.id).toList();
+  }
+
+  <span class="kw">int</span> <span class="fn">getCategoryCount</span>(<span class="type">FoodCategory</span> category) {
+    <span class="kw">return</span> activeItems.where((i) =&gt; i.category.id == category.id).length;
+  }
+
+  <span class="kw">int</span> <span class="kw">get</span> totalTracked =&gt; _items.length;
+  <span class="kw">int</span> <span class="kw">get</span> totalConsumed =&gt; _items.where((i) =&gt; i.isConsumed).length;
+  <span class="kw">int</span> <span class="kw">get</span> totalDiscarded =&gt; _items.where((i) =&gt; i.isDiscarded).length;
+
+  <span class="kw">void</span> <span class="fn">listenToItems</span>(<span class="type">String</span> userId, <span class="type">List</span>&lt;<span class="type">FoodCategory</span>&gt; categories) {
+    _userId = userId;
+    _categories = categories;
+    _isLoading = <span class="kw">true</span>;
+    <span class="fn">notifyListeners</span>();
+    _subscription?.cancel();
+    _subscription = _firestoreService.<span class="fn">getFoodItemsRaw</span>(userId).listen((rawItems) {
+      _items = rawItems.map((map) {
+        <span class="kw">final</span> catId = map[<span class="str">'categoryId'</span>] <span class="kw">as</span> <span class="type">String</span>? ?? <span class="str">''</span>;
+        <span class="type">FoodCategory</span> category;
+        <span class="kw">try</span> {
+          category = _categories.firstWhere((c) =&gt; c.id == catId);
+        } <span class="kw">catch</span> (_) {
+          category = <span class="type">FoodCategory</span>(id: catId, label: catId, emoji: <span class="str">'📦'</span>, color: <span class="kw">const</span> <span class="type">Color</span>(<span class="str">0xFF9E9E9E</span>));
+        }
+        <span class="kw">return</span> <span class="type">FoodItem</span>.fromMap(map, category);
+      }).toList();
+      _isLoading = <span class="kw">false</span>;
+      <span class="fn">notifyListeners</span>();
+    });
+  }
+
+  <span class="kw">void</span> <span class="fn">updateCategories</span>(<span class="type">List</span>&lt;<span class="type">FoodCategory</span>&gt; categories) {
+    _categories = categories;
+    <span class="kw">if</span> (_userId != <span class="kw">null</span>) {
+      <span class="kw">final</span> updatedItems = _items.map((item) {
+        <span class="kw">try</span> {
+          <span class="kw">final</span> cat = _categories.firstWhere((c) =&gt; c.id == item.category.id);
+          <span class="kw">return</span> <span class="type">FoodItem</span>(
+            id: item.id, name: item.name, category: cat, emoji: item.emoji,
+            purchaseDate: item.purchaseDate, expiryDate: item.expiryDate,
+            quantity: item.quantity, unit: item.unit, notes: item.notes,
+            imageUrl: item.imageUrl, isConsumed: item.isConsumed,
+            isDiscarded: item.isDiscarded, consumedDate: item.consumedDate,
+            discardedDate: item.discardedDate,
+          );
+        } <span class="kw">catch</span> (_) { <span class="kw">return</span> item; }
+      }).toList();
+      _items = updatedItems;
+      <span class="fn">notifyListeners</span>();
+    }
+  }
+
+  <span class="kw">void</span> <span class="fn">stopListening</span>() {
+    _subscription?.cancel();
+    _items = [];
+    _selectedCategory = <span class="kw">null</span>;
+    <span class="fn">notifyListeners</span>();
+  }
+
+  <span class="cm">// ===== Actions =====</span>
+
+<span class="hl-add">  <span class="type">Future</span>&lt;<span class="kw">void</span>&gt; <span class="fn">addItem</span>(<span class="type">FoodItem</span> item, {<span class="type">File</span>? imageFile}) <span class="kw">async</span> {
+    <span class="kw">if</span> (_userId == <span class="kw">null</span>) <span class="kw">return</span>;
+
+    <span class="type">String</span>? imageUrl;
+    <span class="kw">if</span> (imageFile != <span class="kw">null</span>) {
+      <span class="kw">try</span> {
+        imageUrl = <span class="kw">await</span> _firestoreService.<span class="fn">uploadImage</span>(_userId!, item.id, imageFile);
+      } <span class="kw">catch</span> (_) {
+        <span class="cm">// Image upload failed — save item without image</span>
+      }
+    }
+
+    <span class="kw">final</span> itemToSave = <span class="type">FoodItem</span>(
+      id: item.id, name: item.name, category: item.category,
+      emoji: item.emoji, purchaseDate: item.purchaseDate,
+      expiryDate: item.expiryDate, quantity: item.quantity,
+      unit: item.unit, notes: item.notes,
+      imageUrl: imageUrl ?? item.imageUrl,
+    );
+
+    <span class="kw">await</span> _firestoreService.<span class="fn">addFoodItem</span>(_userId!, itemToSave);
+  }</span>
+
+  <span class="type">Future</span>&lt;<span class="kw">void</span>&gt; <span class="fn">consumeItem</span>(<span class="type">String</span> id) <span class="kw">async</span> {
+    <span class="kw">if</span> (_userId == <span class="kw">null</span>) <span class="kw">return</span>;
+    <span class="kw">final</span> index = _items.indexWhere((i) =&gt; i.id == id);
+    <span class="kw">if</span> (index != -1) {
+      _items[index].isConsumed = <span class="kw">true</span>;
+      _items[index].consumedDate = <span class="type">DateTime</span>.now();
+      <span class="fn">notifyListeners</span>();
+      <span class="kw">await</span> _firestoreService.<span class="fn">updateFoodItem</span>(_userId!, id, {
+        <span class="str">'isConsumed'</span>: <span class="kw">true</span>,
+        <span class="str">'consumedDate'</span>: <span class="type">DateTime</span>.now().toIso8601String(),
+      });
+    }
+  }
+
+  <span class="type">Future</span>&lt;<span class="kw">void</span>&gt; <span class="fn">discardItem</span>(<span class="type">String</span> id) <span class="kw">async</span> {
+    <span class="kw">if</span> (_userId == <span class="kw">null</span>) <span class="kw">return</span>;
+    <span class="kw">final</span> index = _items.indexWhere((i) =&gt; i.id == id);
+    <span class="kw">if</span> (index != -1) {
+      _items[index].isDiscarded = <span class="kw">true</span>;
+      _items[index].discardedDate = <span class="type">DateTime</span>.now();
+      <span class="fn">notifyListeners</span>();
+      <span class="kw">await</span> _firestoreService.<span class="fn">updateFoodItem</span>(_userId!, id, {
+        <span class="str">'isDiscarded'</span>: <span class="kw">true</span>,
+        <span class="str">'discardedDate'</span>: <span class="type">DateTime</span>.now().toIso8601String(),
+      });
+    }
+  }
+
+  <span class="type">Future</span>&lt;<span class="kw">void</span>&gt; <span class="fn">updateQuantity</span>(<span class="type">String</span> id, <span class="kw">int</span> quantity, <span class="type">String</span> unit) <span class="kw">async</span> {
+    <span class="kw">if</span> (_userId == <span class="kw">null</span>) <span class="kw">return</span>;
+    <span class="kw">final</span> index = _items.indexWhere((i) =&gt; i.id == id);
+    <span class="kw">if</span> (index != -1) {
+      <span class="kw">final</span> item = _items[index];
+      _items[index] = <span class="type">FoodItem</span>(
+        id: item.id, name: item.name, category: item.category,
+        emoji: item.emoji, purchaseDate: item.purchaseDate,
+        expiryDate: item.expiryDate, quantity: quantity,
+        unit: unit, notes: item.notes, imageUrl: item.imageUrl,
+        isConsumed: item.isConsumed, isDiscarded: item.isDiscarded,
+        consumedDate: item.consumedDate, discardedDate: item.discardedDate,
+      );
+      <span class="fn">notifyListeners</span>();
+      <span class="kw">await</span> _firestoreService.<span class="fn">updateFoodItem</span>(_userId!, id, {<span class="str">'quantity'</span>: quantity, <span class="str">'unit'</span>: unit});
+    }
+  }
+
+<span class="hl-add">  <span class="type">Future</span>&lt;<span class="kw">void</span>&gt; <span class="fn">updateItemImage</span>(<span class="type">String</span> itemId, <span class="type">File</span> imageFile) <span class="kw">async</span> {
+    <span class="kw">if</span> (_userId == <span class="kw">null</span>) <span class="kw">return</span>;
+    <span class="kw">final</span> imageUrl = <span class="kw">await</span> _firestoreService.<span class="fn">uploadImage</span>(_userId!, itemId, imageFile);
+    <span class="kw">await</span> _firestoreService.<span class="fn">updateFoodItem</span>(_userId!, itemId, {<span class="str">'imageUrl'</span>: imageUrl});
+  }
+
+  <span class="type">Future</span>&lt;<span class="kw">void</span>&gt; <span class="fn">removeItem</span>(<span class="type">String</span> id) <span class="kw">async</span> {
+    <span class="kw">if</span> (_userId == <span class="kw">null</span>) <span class="kw">return</span>;
+    <span class="kw">await</span> _firestoreService.<span class="fn">deleteFoodItem</span>(_userId!, id);
+    <span class="kw">await</span> _firestoreService.<span class="fn">deleteImage</span>(_userId!, id);
+  }</span>
+
+  <span class="kw">void</span> <span class="fn">setCategory</span>(<span class="type">FoodCategory</span>? category) {
+    _selectedCategory = category;
+    <span class="fn">notifyListeners</span>();
+  }
+
+  <span class="type">Future</span>&lt;<span class="kw">void</span>&gt; <span class="fn">resetPantry</span>() <span class="kw">async</span> {
+    <span class="kw">if</span> (_userId == <span class="kw">null</span>) <span class="kw">return</span>;
+    <span class="kw">await</span> _firestoreService.<span class="fn">deleteAllFoodItems</span>(_userId!);
+    _items = [];
+    <span class="fn">notifyListeners</span>();
+  }
+
+  <span class="kw">@override</span>
+  <span class="kw">void</span> <span class="fn">dispose</span>() {
+    _subscription?.cancel();
+    <span class="kw">super</span>.dispose();
+  }
+}</pre>
+</div>
+
+<!-- FILE 4: food_item_card.dart -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">4</div>
+    <div class="section-meta">
+      <h2>class FoodItemCard</h2>
+      <span class="filepath">lib/features/dashboard/widgets/food_item_card.dart</span>
+    </div>
+  </div>
+
+  <div class="change-summary">
+    <strong>สิ่งที่เปลี่ยน:</strong>
+    <ul>
+      <li>ใช้ <strong>NetworkImage(item.imageUrl!)</strong> เพื่อโหลดรูปจาก Firebase Storage URL</li>
+      <li>ถ้า <code>imageUrl == null</code> จะแสดง Emoji แทน</li>
+    </ul>
+  </div>
+
+  <div class="label">โค้ดเต็ม — food_item_card.dart</div>
+  <pre><span class="kw">import</span> <span class="str">'package:flutter/material.dart'</span>;
+<span class="kw">import</span> <span class="str">'../../../core/constants/app_theme.dart'</span>;
+<span class="kw">import</span> <span class="str">'../../../core/widgets/status_badge.dart'</span>;
+<span class="kw">import</span> <span class="str">'../../../models/food_item.dart'</span>;
+
+<span class="kw">class</span> <span class="type">FoodItemCard</span> <span class="kw">extends</span> <span class="type">StatelessWidget</span> {
+  <span class="kw">final</span> <span class="type">FoodItem</span> item;
+  <span class="kw">final</span> <span class="type">VoidCallback</span> onTap;
+  <span class="kw">const</span> <span class="type">FoodItemCard</span>({<span class="kw">super</span>.key, <span class="kw">required</span> <span class="kw">this</span>.item, <span class="kw">required</span> <span class="kw">this</span>.onTap});
+
+  <span class="kw">@override</span>
+  <span class="type">Widget</span> <span class="fn">build</span>(<span class="type">BuildContext</span> context) {
+    <span class="kw">return</span> <span class="type">GestureDetector</span>(
+      onTap: onTap,
+      child: <span class="type">Container</span>(
+        padding: <span class="kw">const</span> <span class="type">EdgeInsets</span>.all(12),
+        decoration: <span class="type">BoxDecoration</span>(
+          color: <span class="type">Colors</span>.white,
+          borderRadius: <span class="type">BorderRadius</span>.circular(<span class="type">AppTheme</span>.cardRadius),
+          boxShadow: [
+            <span class="type">BoxShadow</span>(color: <span class="type">Colors</span>.black.withOpacity(0.06), blurRadius: 8, offset: <span class="kw">const</span> <span class="type">Offset</span>(0, 2)),
+          ],
+        ),
+        child: <span class="type">Row</span>(
+          children: [
+            <span class="cm">// Image or Emoji</span>
+            <span class="type">Container</span>(
+              width: 68,
+              height: 68,
+              decoration: <span class="type">BoxDecoration</span>(
+                color: item.status.backgroundColor,
+                borderRadius: <span class="type">BorderRadius</span>.circular(12),
+<span class="hl-add">                image: item.imageUrl != <span class="kw">null</span>
+                    ? <span class="type">DecorationImage</span>(
+                        image: <span class="type">NetworkImage</span>(item.imageUrl!),  <span class="cm">// &lt;-- Firebase Storage URL</span>
+                        fit: <span class="type">BoxFit</span>.cover,
+                      )
+                    : <span class="kw">null</span>,</span>
+              ),
+              child: item.imageUrl == <span class="kw">null</span>
+                  ? <span class="type">Center</span>(child: <span class="type">Text</span>(item.emoji, style: <span class="kw">const</span> <span class="type">TextStyle</span>(fontSize: 36)))
+                  : <span class="kw">null</span>,
+            ),
+            <span class="kw">const</span> <span class="type">SizedBox</span>(width: 12),
+            <span class="type">Expanded</span>(
+              child: <span class="type">Column</span>(
+                crossAxisAlignment: <span class="type">CrossAxisAlignment</span>.start,
+                children: [
+                  <span class="type">Text</span>(item.name, style: <span class="kw">const</span> <span class="type">TextStyle</span>(fontSize: 18, fontWeight: <span class="type">FontWeight</span>.w700), maxLines: 1, overflow: <span class="type">TextOverflow</span>.ellipsis),
+                  <span class="kw">const</span> <span class="type">SizedBox</span>(height: 2),
+                  <span class="type">Text</span>(<span class="str">'${item.category.emoji} ${item.category.label}'</span>, style: <span class="type">TextStyle</span>(fontSize: 13, fontWeight: <span class="type">FontWeight</span>.w600, color: <span class="type">Colors</span>.grey[600])),
+                  <span class="kw">const</span> <span class="type">SizedBox</span>(height: 6),
+                  <span class="type">StatusBadge</span>(status: item.status),
+                ],
+              ),
+            ),
+            <span class="type">Column</span>(
+              crossAxisAlignment: <span class="type">CrossAxisAlignment</span>.end,
+              children: [
+                <span class="type">Text</span>(<span class="str">'${item.daysRemaining}'</span>, style: <span class="type">TextStyle</span>(fontSize: 26, fontWeight: <span class="type">FontWeight</span>.w800, color: item.status.color)),
+                <span class="type">Text</span>(
+                  item.daysRemaining &gt;= 0 ? <span class="str">'DAYS\nLEFT'</span> : <span class="str">'DAYS\nAGO'</span>,
+                  style: <span class="type">TextStyle</span>(fontSize: 9, fontWeight: <span class="type">FontWeight</span>.w700, color: <span class="type">Colors</span>.grey[500], height: 1.2),
+                  textAlign: <span class="type">TextAlign</span>.end,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}</pre>
+</div>
+
+<!-- FILE 5: item_detail_screen.dart -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">5</div>
+    <div class="section-meta">
+      <h2>class ItemDetailScreen + _ItemImage + _PhotoButton + _DetailCard</h2>
+      <span class="filepath">lib/features/item_detail/screens/item_detail_screen.dart</span>
+    </div>
+  </div>
+
+  <div class="change-summary">
+    <strong>สิ่งที่เปลี่ยน:</strong>
+    <ul>
+      <li><strong>_ItemImage widget</strong> — ใช้ <code>Image.network()</code> เพื่อโหลดรูปจาก Firebase Storage URL</li>
+      <li>ปุ่ม <strong>Retake / Upload</strong> ใน <code>_ItemImage</code> เรียก <code>provider.updateItemImage()</code> เพื่ออัปโหลดรูปใหม่</li>
+    </ul>
+  </div>
+
+  <div class="label">โค้ดเต็ม — item_detail_screen.dart</div>
+  <pre><span class="kw">import</span> <span class="str">'dart:io'</span>;
+<span class="kw">import</span> <span class="str">'package:flutter/material.dart'</span>;
+<span class="kw">import</span> <span class="str">'package:go_router/go_router.dart'</span>;
+<span class="kw">import</span> <span class="str">'package:image_picker/image_picker.dart'</span>;
+<span class="kw">import</span> <span class="str">'package:intl/intl.dart'</span>;
+<span class="kw">import</span> <span class="str">'package:provider/provider.dart'</span>;
+<span class="kw">import</span> <span class="str">'../../../models/food_item.dart'</span>;
+<span class="kw">import</span> <span class="str">'../../../core/constants/app_colors.dart'</span>;
+<span class="kw">import</span> <span class="str">'../../../core/constants/app_theme.dart'</span>;
+<span class="kw">import</span> <span class="str">'../../../core/widgets/action_button.dart'</span>;
+<span class="kw">import</span> <span class="str">'../../../core/widgets/status_badge.dart'</span>;
+<span class="kw">import</span> <span class="str">'../../../providers/food_items_provider.dart'</span>;
+
+<span class="kw">const</span> <span class="type">List</span>&lt;<span class="type">String</span>&gt; _unitOptions = [<span class="str">'unit'</span>, <span class="str">'pack'</span>, <span class="str">'box'</span>, <span class="str">'bag'</span>, <span class="str">'kg'</span>, <span class="str">'g'</span>, <span class="str">'L'</span>, <span class="str">'mL'</span>, <span class="str">'piece'</span>];
+
+<span class="kw">void</span> <span class="fn">_showQuantityEditor</span>(<span class="type">BuildContext</span> context, <span class="type">FoodItem</span> item, <span class="type">FoodItemsProvider</span> provider) {
+  <span class="kw">int</span> tempQty = item.quantity;
+  <span class="type">String</span> tempUnit = _unitOptions.contains(item.unit) ? item.unit : <span class="str">'unit'</span>;
+  showDialog(
+    context: context,
+    builder: (ctx) =&gt; <span class="type">StatefulBuilder</span>(
+      builder: (ctx, setDlgState) =&gt; <span class="type">AlertDialog</span>(
+        title: <span class="kw">const</span> <span class="type">Text</span>(<span class="str">'Edit Quantity'</span>, style: <span class="type">TextStyle</span>(fontWeight: <span class="type">FontWeight</span>.w700)),
+        content: <span class="type">Column</span>(
+          mainAxisSize: <span class="type">MainAxisSize</span>.min,
+          children: [
+            <span class="type">Row</span>(
+              mainAxisAlignment: <span class="type">MainAxisAlignment</span>.center,
+              children: [
+                <span class="type">IconButton</span>(
+                  onPressed: tempQty &gt; 1 ? () =&gt; setDlgState(() =&gt; tempQty--) : <span class="kw">null</span>,
+                  icon: <span class="kw">const</span> <span class="type">Icon</span>(<span class="type">Icons</span>.remove_circle_outline, size: 36),
+                  color: <span class="type">AppColors</span>.primary,
+                ),
+                <span class="type">SizedBox</span>(
+                  width: 72,
+                  child: <span class="type">Text</span>(<span class="str">'$tempQty'</span>, textAlign: <span class="type">TextAlign</span>.center,
+                    style: <span class="kw">const</span> <span class="type">TextStyle</span>(fontSize: 28, fontWeight: <span class="type">FontWeight</span>.w800, color: <span class="type">AppColors</span>.textPrimary)),
+                ),
+                <span class="type">IconButton</span>(
+                  onPressed: tempQty &lt; 999 ? () =&gt; setDlgState(() =&gt; tempQty++) : <span class="kw">null</span>,
+                  icon: <span class="kw">const</span> <span class="type">Icon</span>(<span class="type">Icons</span>.add_circle_outline, size: 36),
+                  color: <span class="type">AppColors</span>.primary,
+                ),
+              ],
+            ),
+            <span class="kw">const</span> <span class="type">SizedBox</span>(height: 12),
+            <span class="type">Container</span>(
+              padding: <span class="kw">const</span> <span class="type">EdgeInsets</span>.symmetric(horizontal: 16),
+              decoration: <span class="type">BoxDecoration</span>(
+                color: <span class="type">Colors</span>.grey[100],
+                borderRadius: <span class="type">BorderRadius</span>.circular(12),
+                border: <span class="type">Border</span>.all(color: <span class="type">Colors</span>.grey.shade300),
+              ),
+              child: <span class="type">DropdownButtonHideUnderline</span>(
+                child: <span class="type">DropdownButton</span>&lt;<span class="type">String</span>&gt;(
+                  value: tempUnit, isExpanded: <span class="kw">true</span>,
+                  style: <span class="kw">const</span> <span class="type">TextStyle</span>(fontSize: 16, color: <span class="type">AppColors</span>.textPrimary),
+                  items: _unitOptions.map((u) =&gt; <span class="type">DropdownMenuItem</span>(value: u, child: <span class="type">Text</span>(u))).toList(),
+                  onChanged: (val) { <span class="kw">if</span> (val != <span class="kw">null</span>) setDlgState(() =&gt; tempUnit = val); },
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          <span class="type">TextButton</span>(onPressed: () =&gt; <span class="type">Navigator</span>.pop(ctx), child: <span class="kw">const</span> <span class="type">Text</span>(<span class="str">'Cancel'</span>)),
+          <span class="type">ElevatedButton</span>(
+            onPressed: () { provider.<span class="fn">updateQuantity</span>(item.id, tempQty, tempUnit); <span class="type">Navigator</span>.pop(ctx); },
+            style: <span class="type">ElevatedButton</span>.styleFrom(backgroundColor: <span class="type">AppColors</span>.primary),
+            child: <span class="kw">const</span> <span class="type">Text</span>(<span class="str">'Save'</span>, style: <span class="type">TextStyle</span>(color: <span class="type">Colors</span>.white)),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+<span class="kw">class</span> <span class="type">ItemDetailScreen</span> <span class="kw">extends</span> <span class="type">StatelessWidget</span> {
+  <span class="kw">final</span> <span class="type">String</span> itemId;
+  <span class="kw">const</span> <span class="type">ItemDetailScreen</span>({<span class="kw">super</span>.key, <span class="kw">required</span> <span class="kw">this</span>.itemId});
+
+  <span class="kw">@override</span>
+  <span class="type">Widget</span> <span class="fn">build</span>(<span class="type">BuildContext</span> context) {
+    <span class="kw">return</span> <span class="type">Consumer</span>&lt;<span class="type">FoodItemsProvider</span>&gt;(
+      builder: (context, provider, _) {
+        <span class="kw">final</span> item = provider.items.where((i) =&gt; i.id == itemId).firstOrNull;
+        <span class="kw">if</span> (item == <span class="kw">null</span>) {
+          <span class="kw">return</span> <span class="type">Scaffold</span>(appBar: <span class="type">AppBar</span>(title: <span class="kw">const</span> <span class="type">Text</span>(<span class="str">'Not Found'</span>)), body: <span class="kw">const</span> <span class="type">Center</span>(child: <span class="type">Text</span>(<span class="str">'Item not found.'</span>)));
+        }
+        <span class="kw">return</span> <span class="type">Scaffold</span>(
+          backgroundColor: <span class="type">AppColors</span>.background,
+          appBar: <span class="type">AppBar</span>(
+            title: <span class="kw">const</span> <span class="type">Text</span>(<span class="str">'Item Detail'</span>),
+            leading: <span class="type">IconButton</span>(icon: <span class="kw">const</span> <span class="type">Icon</span>(<span class="type">Icons</span>.arrow_back, size: 28), onPressed: () =&gt; context.pop()),
+          ),
+          body: <span class="type">SingleChildScrollView</span>(
+            child: <span class="type">Column</span>(children: [
+              <span class="type">_ItemImage</span>(item: item, provider: provider),
+              <span class="type">Padding</span>(
+                padding: <span class="kw">const</span> <span class="type">EdgeInsets</span>.all(<span class="type">AppTheme</span>.spacingMD),
+                child: <span class="type">Column</span>(
+                  crossAxisAlignment: <span class="type">CrossAxisAlignment</span>.start,
+                  children: [
+                    <span class="type">Text</span>(item.name, style: <span class="kw">const</span> <span class="type">TextStyle</span>(fontSize: 28, fontWeight: <span class="type">FontWeight</span>.w800, color: <span class="type">AppColors</span>.textPrimary)),
+                    <span class="kw">const</span> <span class="type">SizedBox</span>(height: 8),
+                    <span class="type">Container</span>(
+                      padding: <span class="kw">const</span> <span class="type">EdgeInsets</span>.symmetric(horizontal: 12, vertical: 6),
+                      decoration: <span class="type">BoxDecoration</span>(
+                        color: item.category.color.withOpacity(0.15),
+                        borderRadius: <span class="type">BorderRadius</span>.circular(20),
+                      ),
+                      child: <span class="type">Text</span>(<span class="str">'${item.category.emoji} ${item.category.label}'</span>,
+                        style: <span class="type">TextStyle</span>(fontSize: 15, fontWeight: <span class="type">FontWeight</span>.w700, color: item.category.color)),
+                    ),
+                    <span class="kw">const</span> <span class="type">SizedBox</span>(height: 20),
+                    <span class="type">_DetailCard</span>(icon: <span class="str">'📅'</span>, label: <span class="str">'Expiry Date'</span>, value: <span class="type">DateFormat</span>(<span class="str">'MMM dd, yyyy'</span>).format(item.expiryDate)),
+                    <span class="kw">const</span> <span class="type">SizedBox</span>(height: 10),
+                    <span class="type">_DetailCard</span>(icon: <span class="str">'⏳'</span>, label: <span class="str">'Days Remaining'</span>, value: item.daysRemainingText, valueColor: item.status.color),
+                    <span class="kw">const</span> <span class="type">SizedBox</span>(height: 10),
+                    <span class="type">_DetailCard</span>(icon: <span class="str">'📦'</span>, label: <span class="str">'Quantity'</span>, value: <span class="str">'${item.quantity} ${item.unit}'</span>,
+                      onTap: () =&gt; <span class="fn">_showQuantityEditor</span>(context, item, provider)),
+                    <span class="kw">const</span> <span class="type">SizedBox</span>(height: 10),
+                    <span class="type">Row</span>(children: [
+                      <span class="kw">const</span> <span class="type">Text</span>(<span class="str">'Status: '</span>, style: <span class="type">TextStyle</span>(fontSize: 16, fontWeight: <span class="type">FontWeight</span>.w600)),
+                      <span class="type">StatusBadge</span>(status: item.status),
+                    ]),
+                    <span class="kw">if</span> (item.notes != <span class="kw">null</span>) ...[
+                      <span class="kw">const</span> <span class="type">SizedBox</span>(height: 16),
+                      <span class="type">Text</span>(<span class="str">'📝 ${item.notes}'</span>, style: <span class="type">TextStyle</span>(fontSize: 15, color: <span class="type">Colors</span>.grey[600])),
+                    ],
+                    <span class="kw">const</span> <span class="type">SizedBox</span>(height: 32),
+                    <span class="type">ActionButton</span>(label: <span class="str">'Consumed'</span>, emoji: <span class="str">'🍽️'</span>, color: <span class="type">AppColors</span>.safe,
+                      onPressed: () {
+                        provider.<span class="fn">consumeItem</span>(item.id);
+                        <span class="type">ScaffoldMessenger</span>.of(context).showSnackBar(<span class="kw">const</span> <span class="type">SnackBar</span>(
+                          content: <span class="type">Text</span>(<span class="str">'✅ Marked as consumed!'</span>, style: <span class="type">TextStyle</span>(fontSize: 16)),
+                          backgroundColor: <span class="type">AppColors</span>.safe));
+                        context.pop();
+                      }),
+                    <span class="kw">const</span> <span class="type">SizedBox</span>(height: 12),
+                    <span class="type">ActionButton</span>(label: <span class="str">'Discarded'</span>, emoji: <span class="str">'🗑️'</span>, color: <span class="type">AppColors</span>.expired,
+                      onPressed: () {
+                        provider.<span class="fn">discardItem</span>(item.id);
+                        <span class="type">ScaffoldMessenger</span>.of(context).showSnackBar(<span class="kw">const</span> <span class="type">SnackBar</span>(
+                          content: <span class="type">Text</span>(<span class="str">'🗑️ Marked as discarded'</span>, style: <span class="type">TextStyle</span>(fontSize: 16)),
+                          backgroundColor: <span class="type">AppColors</span>.expired));
+                        context.pop();
+                      }),
+                  ],
+                ),
+              ),
+            ]),
+          ),
+        );
+      },
+    );
+  }
+}
+
+<span class="cm">// ===== Widget แสดงรูปภาพ + ปุ่ม Retake =====</span>
+<span class="kw">class</span> <span class="type">_ItemImage</span> <span class="kw">extends</span> <span class="type">StatelessWidget</span> {
+  <span class="kw">final</span> <span class="type">FoodItem</span> item;
+  <span class="kw">final</span> <span class="type">FoodItemsProvider</span> provider;
+  <span class="kw">const</span> <span class="type">_ItemImage</span>({<span class="kw">required</span> <span class="kw">this</span>.item, <span class="kw">required</span> <span class="kw">this</span>.provider});
+
+  <span class="kw">@override</span>
+  <span class="type">Widget</span> <span class="fn">build</span>(<span class="type">BuildContext</span> context) {
+    <span class="kw">return</span> <span class="type">Stack</span>(
+      children: [
+        <span class="type">Container</span>(
+          width: <span class="kw">double</span>.infinity,
+          height: 200,
+          color: item.status.backgroundColor,
+<span class="hl-add">          child: item.imageUrl != <span class="kw">null</span>
+              ? <span class="type">Image</span>.network(item.imageUrl!, fit: <span class="type">BoxFit</span>.cover,  <span class="cm">// &lt;-- Firebase Storage URL</span>
+                  errorBuilder: (_, __, ___) =&gt; <span class="type">Center</span>(child: <span class="type">Text</span>(item.emoji, style: <span class="kw">const</span> <span class="type">TextStyle</span>(fontSize: 100))))
+              : <span class="type">Center</span>(child: <span class="type">Text</span>(item.emoji, style: <span class="kw">const</span> <span class="type">TextStyle</span>(fontSize: 100))),</span>
+        ),
+        <span class="type">Positioned</span>(
+          bottom: 10, right: 10,
+          child: <span class="type">Row</span>(
+            children: [
+              <span class="type">_PhotoButton</span>(icon: <span class="type">Icons</span>.camera_alt, label: <span class="str">'Retake'</span>,
+                onTap: () =&gt; <span class="fn">_retakePhoto</span>(context, <span class="type">ImageSource</span>.camera)),
+              <span class="kw">const</span> <span class="type">SizedBox</span>(width: 8),
+              <span class="type">_PhotoButton</span>(icon: <span class="type">Icons</span>.upload_file, label: <span class="str">'Upload'</span>,
+                onTap: () =&gt; <span class="fn">_retakePhoto</span>(context, <span class="type">ImageSource</span>.gallery)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  <span class="kw">void</span> <span class="fn">_retakePhoto</span>(<span class="type">BuildContext</span> context, <span class="type">ImageSource</span> source) <span class="kw">async</span> {
+    <span class="kw">final</span> picker = <span class="type">ImagePicker</span>();
+    <span class="kw">final</span> <span class="type">XFile</span>? photo = <span class="kw">await</span> picker.<span class="fn">pickImage</span>(source: source, imageQuality: 75);
+    <span class="kw">if</span> (photo != <span class="kw">null</span>) {
+      <span class="kw">final</span> file = <span class="type">File</span>(photo.path);
+      <span class="kw">await</span> provider.<span class="fn">updateItemImage</span>(item.id, file);
+      <span class="kw">if</span> (context.mounted) {
+        <span class="type">ScaffoldMessenger</span>.of(context).showSnackBar(<span class="kw">const</span> <span class="type">SnackBar</span>(
+          content: <span class="type">Text</span>(<span class="str">'📷 Photo updated!'</span>, style: <span class="type">TextStyle</span>(fontSize: 16)),
+          backgroundColor: <span class="type">AppColors</span>.safe));
+      }
+    }
+  }
+}
+
+<span class="kw">class</span> <span class="type">_PhotoButton</span> <span class="kw">extends</span> <span class="type">StatelessWidget</span> {
+  <span class="kw">final</span> <span class="type">IconData</span> icon;
+  <span class="kw">final</span> <span class="type">String</span> label;
+  <span class="kw">final</span> <span class="type">VoidCallback</span> onTap;
+  <span class="kw">const</span> <span class="type">_PhotoButton</span>({<span class="kw">required</span> <span class="kw">this</span>.icon, <span class="kw">required</span> <span class="kw">this</span>.label, <span class="kw">required</span> <span class="kw">this</span>.onTap});
+
+  <span class="kw">@override</span>
+  <span class="type">Widget</span> <span class="fn">build</span>(<span class="type">BuildContext</span> context) {
+    <span class="kw">return</span> <span class="type">GestureDetector</span>(
+      onTap: onTap,
+      child: <span class="type">Container</span>(
+        padding: <span class="kw">const</span> <span class="type">EdgeInsets</span>.symmetric(horizontal: 12, vertical: 8),
+        decoration: <span class="type">BoxDecoration</span>(color: <span class="type">Colors</span>.black54, borderRadius: <span class="type">BorderRadius</span>.circular(20)),
+        child: <span class="type">Row</span>(
+          mainAxisSize: <span class="type">MainAxisSize</span>.min,
+          children: [
+            <span class="type">Icon</span>(icon, color: <span class="type">Colors</span>.white, size: 16),
+            <span class="kw">const</span> <span class="type">SizedBox</span>(width: 4),
+            <span class="type">Text</span>(label, style: <span class="kw">const</span> <span class="type">TextStyle</span>(color: <span class="type">Colors</span>.white, fontSize: 12, fontWeight: <span class="type">FontWeight</span>.w600)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+<span class="kw">class</span> <span class="type">_DetailCard</span> <span class="kw">extends</span> <span class="type">StatelessWidget</span> {
+  <span class="kw">final</span> <span class="type">String</span> icon;
+  <span class="kw">final</span> <span class="type">String</span> label;
+  <span class="kw">final</span> <span class="type">String</span> value;
+  <span class="kw">final</span> <span class="type">Color</span>? valueColor;
+  <span class="kw">final</span> <span class="type">VoidCallback</span>? onTap;
+  <span class="kw">const</span> <span class="type">_DetailCard</span>({<span class="kw">required</span> <span class="kw">this</span>.icon, <span class="kw">required</span> <span class="kw">this</span>.label, <span class="kw">required</span> <span class="kw">this</span>.value, <span class="kw">this</span>.valueColor, <span class="kw">this</span>.onTap});
+
+  <span class="kw">@override</span>
+  <span class="type">Widget</span> <span class="fn">build</span>(<span class="type">BuildContext</span> context) {
+    <span class="kw">final</span> card = <span class="type">Container</span>(
+      padding: <span class="kw">const</span> <span class="type">EdgeInsets</span>.all(14),
+      decoration: <span class="type">BoxDecoration</span>(
+        color: <span class="type">Colors</span>.white,
+        borderRadius: <span class="type">BorderRadius</span>.circular(12),
+        boxShadow: [<span class="type">BoxShadow</span>(color: <span class="type">Colors</span>.black.withOpacity(0.04), blurRadius: 4, offset: <span class="kw">const</span> <span class="type">Offset</span>(0, 1))],
+      ),
+      child: <span class="type">Row</span>(children: [
+        <span class="type">Text</span>(icon, style: <span class="kw">const</span> <span class="type">TextStyle</span>(fontSize: 22)),
+        <span class="kw">const</span> <span class="type">SizedBox</span>(width: 12),
+        <span class="type">Expanded</span>(
+          child: <span class="type">Column</span>(crossAxisAlignment: <span class="type">CrossAxisAlignment</span>.start, children: [
+            <span class="type">Text</span>(label, style: <span class="type">TextStyle</span>(fontSize: 13, fontWeight: <span class="type">FontWeight</span>.w600, color: <span class="type">Colors</span>.grey[500])),
+            <span class="type">Text</span>(value, style: <span class="type">TextStyle</span>(fontSize: 18, fontWeight: <span class="type">FontWeight</span>.w700, color: valueColor ?? <span class="type">AppColors</span>.textPrimary)),
+          ]),
+        ),
+        <span class="kw">if</span> (onTap != <span class="kw">null</span>) <span class="kw">const</span> <span class="type">Icon</span>(<span class="type">Icons</span>.edit_outlined, size: 18, color: <span class="type">AppColors</span>.primary),
+      ]),
+    );
+    <span class="kw">if</span> (onTap != <span class="kw">null</span>) {
+      <span class="kw">return</span> <span class="type">InkWell</span>(onTap: onTap, borderRadius: <span class="type">BorderRadius</span>.circular(12), child: card);
+    }
+    <span class="kw">return</span> card;
+  }
+}</pre>
+</div>
+
+<!-- FOOTER -->
+<div style="background: #1a1a2e; color: rgba(255,255,255,0.7); text-align: center; padding: 32px; margin-top: 32px; font-size: 13px;">
+  <div style="font-size: 24px; margin-bottom: 8px;">🥬 Smart Pantry</div>
+  <div>สรุปโค้ดที่แก้ไข · branch: claude/user-flow-examples-IKwEm · 25 กุมภาพันธ์ 2569</div>
+  <div style="margin-top: 8px; opacity: 0.5; font-size: 11px;">วิธีบันทึกเป็น PDF: เปิดไฟล์นี้ในเบราว์เซอร์ → Ctrl+P → Save as PDF</div>
+</div>
+
+</body>
+</html>
