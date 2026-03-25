@@ -11,9 +11,7 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const SmartPantryApp());
 }
 
@@ -33,7 +31,6 @@ class SmartPantryApp extends StatelessWidget {
   }
 }
 
-/// Widget ที่ฟัง auth state แล้ว start/stop Firestore listeners
 class _AppWithAuthListener extends StatefulWidget {
   const _AppWithAuthListener();
   @override
@@ -44,31 +41,29 @@ class _AppWithAuthListenerState extends State<_AppWithAuthListener> {
   @override
   void initState() {
     super.initState();
-    // ฟัง Firebase Auth state เพื่อ start/stop listeners
+
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
       final catProvider = context.read<CategoryProvider>();
       final itemsProvider = context.read<FoodItemsProvider>();
 
       if (user != null) {
-        // Login แล้ว -> เริ่มฟัง categories & items
+        // เริ่ม listen categories ก่อน
         catProvider.listenToCategories(user.uid);
 
-        // ต้องรอ categories โหลดก่อนแล้วค่อย listen items
-        // ใช้ addListener เพื่อรอ categories พร้อม
-        void listener() {
-          if (catProvider.categories.isNotEmpty) {
-            itemsProvider.listenToItems(user.uid, catProvider.categories);
-            catProvider.removeListener(listener);
+        // ถ้า categories โหลดแล้ว เรียก listenToItems ได้เลย
+        if (catProvider.categories.isNotEmpty) {
+          itemsProvider.listenToItems(user.uid, catProvider.categories);
+        } else {
+          // ถ้ายังไม่มี categories รอจน categories โหลดเสร็จ
+          void onCategoriesReady() {
+            if (catProvider.categories.isNotEmpty) {
+              itemsProvider.listenToItems(user.uid, catProvider.categories);
+              catProvider.removeListener(onCategoriesReady);
+            }
           }
-        }
-        catProvider.addListener(listener);
 
-        // กรณี categories อาจจะว่าง (user ใหม่ยังไม่มี) ให้ listen items เลย
-        Future.delayed(const Duration(seconds: 2), () {
-          if (itemsProvider.items.isEmpty && !itemsProvider.isLoading) {
-            itemsProvider.listenToItems(user.uid, catProvider.categories);
-          }
-        });
+          catProvider.addListener(onCategoriesReady);
+        }
       } else {
         // Logout -> หยุดฟัง
         catProvider.stopListening();
@@ -79,16 +74,6 @@ class _AppWithAuthListenerState extends State<_AppWithAuthListener> {
 
   @override
   Widget build(BuildContext context) {
-    // อัปเดต items เมื่อ categories เปลี่ยน
-    final categories = context.watch<CategoryProvider>().categories;
-    final itemsProvider = context.read<FoodItemsProvider>();
-    if (categories.isNotEmpty) {
-      // ส่ง categories ล่าสุดให้ items provider
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        itemsProvider.updateCategories(categories);
-      });
-    }
-
     return MaterialApp.router(
       title: 'Smart Pantry',
       debugShowCheckedModeBanner: false,
