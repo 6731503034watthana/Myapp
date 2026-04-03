@@ -27,43 +27,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       body: SafeArea(
-<<<<<<< HEAD
-        child: SingleChildScrollView(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Container(color: Colors.white, padding: const EdgeInsets.all(AppTheme.spacingMD), child: const Text('⚙️ Settings', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.textPrimary))),
-          _sectionHeader('🔔', 'Notifications'),
-          _toggleRow('Expiry Alerts', 'Notify 3 days before expiry', _expiryAlerts, (val) => setState(() => _expiryAlerts = val)),
-          _toggleRow('Weekly Summary', 'Receive report every Monday', _weeklySummary, (val) => setState(() => _weeklySummary = val)),
-          const Divider(height: 1, indent: 16, endIndent: 16),
-          _sectionHeader('📊', 'My Stats'),
-          Consumer<FoodItemsProvider>(builder: (context, provider, _) {
-            final consumed = provider.totalConsumed; final discarded = provider.totalDiscarded; final total = consumed + discarded;
-            final consumeRate = total > 0 ? (consumed / total) * 100 : 75.0;
-            final discardRate = total > 0 ? (discarded / total) * 100 : 25.0;
-            return Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 1))]),
-              child: Column(children: [
-                StatBar(label: 'Consumed', emoji: '🍽️', percentage: consumeRate, color: AppColors.safe),
-                StatBar(label: 'Discarded', emoji: '🗑️', percentage: discardRate, color: AppColors.expired),
-                const SizedBox(height: 8),
-                Text('Total: ${provider.totalTracked} · Consumed: $consumed · Discarded: $discarded', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[500]), textAlign: TextAlign.center),
-              ]),
-            ));
-          }),
-          const SizedBox(height: 8),
-          const Divider(height: 1, indent: 16, endIndent: 16),
-          _sectionHeader('📋', 'Weekly Report'),
-          _toggleRow('Enable Weekly Report', 'Sent to somsri@example.com', _weeklyReport, (val) => setState(() => _weeklyReport = val)),
-          
-          // แก้ไขปุ่มตรงนี้ตาม PDF
-          Padding(padding: const EdgeInsets.all(16), child: SizedBox(width: double.infinity, height: AppTheme.minTouchTarget, child: OutlinedButton(
-            onPressed: () => _showClearDialog(context),
-            style: OutlinedButton.styleFrom(foregroundColor: AppColors.expired, side: const BorderSide(color: AppColors.expired, width: 2), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.buttonRadius))),
-            child: const Text('🔄 Reset Pantry App', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-          ))),
-          const SizedBox(height: 24),
-        ])),
-=======
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -71,7 +34,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Container(
                 color: Colors.white,
                 padding: const EdgeInsets.all(AppTheme.spacingMD),
-                child: const Text('⚙️ Settings', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                child: const Text('⚙️ Settings',
+                    style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary)),
               ),
 
               // User info
@@ -82,23 +49,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 1))],
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black.withAlpha(10),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1))
+                    ],
                   ),
                   child: Row(
                     children: [
                       CircleAvatar(
                         radius: 24,
                         backgroundColor: AppColors.primaryLight,
-                        child: Text(displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                        child: Text(
+                            displayName.isNotEmpty
+                                ? displayName[0].toUpperCase()
+                                : '?',
+                            style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary)),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(displayName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                            Text(email, style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+                            Text(displayName,
+                                style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700)),
+                            Text(email,
+                                style: TextStyle(
+                                    fontSize: 13, color: Colors.grey[500])),
                           ],
                         ),
                       ),
@@ -107,7 +90,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           await authProvider.logout();
                           if (context.mounted) context.go(AppRoutes.login);
                         },
-                        child: const Text('Logout', style: TextStyle(color: AppColors.expired, fontWeight: FontWeight.w600)),
+                        child: const Text('Logout',
+                            style: TextStyle(
+                                color: AppColors.expired,
+                                fontWeight: FontWeight.w600)),
                       ),
                     ],
                   ),
@@ -115,8 +101,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
 
               _sectionHeader('🔔', 'Notifications'),
-              _toggleRow('Expiry Alerts', 'Notify 3 days before expiry', _expiryAlerts, (val) => setState(() => _expiryAlerts = val)),
-              _toggleRow('Weekly Summary', 'Receive report every Monday', _weeklySummary, (val) => setState(() => _weeklySummary = val)),
+              _toggleRow('Expiry Alerts', 'Notify 3 days before expiry',
+                  _expiryAlerts, (val) => setState(() => _expiryAlerts = val)),
+              _toggleRow('Weekly Summary', 'Receive report every Monday',
+                  _weeklySummary,
+                  (val) => setState(() => _weeklySummary = val)),
               const Divider(height: 1, indent: 16, endIndent: 16),
 
               _sectionHeader('📊', 'My Stats'),
@@ -125,8 +114,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   final consumed = provider.totalConsumed;
                   final discarded = provider.totalDiscarded;
                   final total = consumed + discarded;
-                  final consumeRate = total > 0 ? (consumed / total) * 100 : 0.0;
-                  final discardRate = total > 0 ? (discarded / total) * 100 : 0.0;
+                  final consumeRate =
+                      total > 0 ? (consumed / total) * 100 : 0.0;
+                  final discardRate =
+                      total > 0 ? (discarded / total) * 100 : 0.0;
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Container(
@@ -134,16 +125,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 1))],
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.black.withAlpha(10),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1))
+                        ],
                       ),
                       child: Column(
                         children: [
-                          StatBar(label: 'Consumed', emoji: '🍽️', percentage: consumeRate, color: AppColors.safe),
-                          StatBar(label: 'Discarded', emoji: '🗑️', percentage: discardRate, color: AppColors.expired),
+                          StatBar(
+                              label: 'Consumed',
+                              emoji: '🍽️',
+                              percentage: consumeRate,
+                              color: AppColors.safe),
+                          StatBar(
+                              label: 'Discarded',
+                              emoji: '🗑️',
+                              percentage: discardRate,
+                              color: AppColors.expired),
                           const SizedBox(height: 8),
                           Text(
                             'Total: ${provider.totalTracked} · Consumed: $consumed · Discarded: $discarded',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[500]),
+                            style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[500]),
                             textAlign: TextAlign.center,
                           ),
                         ],
@@ -156,9 +163,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const Divider(height: 1, indent: 16, endIndent: 16),
 
               _sectionHeader('📋', 'Weekly Report'),
-              _toggleRow('Enable Weekly Report', 'Sent to $email', _weeklyReport, (val) => setState(() => _weeklyReport = val)),
+              _toggleRow('Enable Weekly Report', 'Sent to $email',
+                  _weeklyReport,
+                  (val) => setState(() => _weeklyReport = val)),
 
-              // Reset Pantry button (ไม่มี confirm dialog)
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: SizedBox(
@@ -168,15 +176,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onPressed: () {
                       context.read<FoodItemsProvider>().resetPantry();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('🗑️ Pantry has been reset', style: TextStyle(fontSize: 16))),
+                        const SnackBar(
+                            content: Text('🗑️ Pantry has been reset',
+                                style: TextStyle(fontSize: 16))),
                       );
                     },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.expired,
                       side: const BorderSide(color: AppColors.expired, width: 2),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.buttonRadius)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.buttonRadius)),
                     ),
-                    child: const Text('🗑️ Reset Pantry', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                    child: const Text('🗑️ Reset Pantry',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w700)),
                   ),
                 ),
               ),
@@ -184,7 +198,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
         ),
->>>>>>> 1ceab7ec31c293d7565f0c91b8a0db451b42a19e
       ),
     );
   }
@@ -194,42 +207,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Row(children: [
           Text(icon, style: const TextStyle(fontSize: 18)),
           const SizedBox(width: 6),
-          Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+          Text(title,
+              style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary)),
         ]),
       );
 
-  Widget _toggleRow(String label, String subtitle, bool value, ValueChanged<bool> onChanged) {
-<<<<<<< HEAD
-    return Padding(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4), child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 1))]),
-      child: Row(children: [
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-          const SizedBox(height: 2),
-          Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
-        ])),
-        Transform.scale(scale: 1.2, child: Switch.adaptive(value: value, onChanged: onChanged, activeColor: AppColors.safe)),
-      ]),
-    ));
-  }
-
-  // แก้ไขกล่องข้อความยืนยันตาม PDF
-  void _showClearDialog(BuildContext context) {
-    showDialog(context: context, builder: (ctx) => AlertDialog(
-      title: const Text('🔄 Reset Pantry App', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
-      content: const Text('คุณแน่ใจแล้วใช่ไหม?', style: TextStyle(fontSize: 16)),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('ยกเลิก', style: TextStyle(fontSize: 16))),
-        TextButton(onPressed: () { 
-          context.read<FoodItemsProvider>().clearHistory(); 
-          Navigator.pop(ctx); 
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('รีเซ็ตระบบเรียบร้อยแล้ว', style: TextStyle(fontSize: 16)))); 
-        },
-          child: const Text('ยืนยัน', style: TextStyle(fontSize: 16, color: AppColors.expired))),
-      ],
-    ));
-=======
+  Widget _toggleRow(String label, String subtitle, bool value,
+      ValueChanged<bool> onChanged) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Container(
@@ -237,20 +224,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 1))],
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withAlpha(10),
+                blurRadius: 4,
+                offset: const Offset(0, 1))
+          ],
         ),
         child: Row(children: [
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+              Text(label,
+                  style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary)),
               const SizedBox(height: 2),
-              Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+              Text(subtitle,
+                  style: TextStyle(fontSize: 12, color: Colors.grey[500])),
             ]),
           ),
-          Transform.scale(scale: 1.2, child: Switch.adaptive(value: value, onChanged: onChanged, activeColor: AppColors.safe)),
+          Transform.scale(
+              scale: 1.2,
+              child: Switch.adaptive(
+                  value: value,
+                  onChanged: onChanged,
+                  activeColor: AppColors.safe)),
         ]),
       ),
     );
->>>>>>> 1ceab7ec31c293d7565f0c91b8a0db451b42a19e
   }
 }

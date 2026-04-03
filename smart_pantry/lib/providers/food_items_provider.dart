@@ -163,7 +163,7 @@ class FoodItemsProvider extends ChangeNotifier {
       _items[index] = FoodItem(
         id: item.id, name: item.name, category: item.category,
         emoji: item.emoji, purchaseDate: item.purchaseDate,
-        expiryDate: item.expiryDate, quantity: quantity,
+        expiryDate: item.expiryDate, quantity: quantity.toDouble(),
         unit: unit, notes: item.notes, imageUrl: item.imageUrl,
         isConsumed: item.isConsumed, isDiscarded: item.isDiscarded,
         consumedDate: item.consumedDate, discardedDate: item.discardedDate,

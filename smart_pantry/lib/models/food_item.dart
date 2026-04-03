@@ -29,9 +29,9 @@ class FoodItem {
   final String emoji;
   final DateTime purchaseDate;
   final DateTime expiryDate;
-  final double quantity;      // เปลี่ยนเป็น double เพื่อรองรับทศนิยม เช่น 1.5
+  final double quantity;
   final String unit;
-  final String? imagePath;    // เพิ่มตัวแปรสำหรับเก็บที่อยู่รูปภาพ (เผื่อไม่ได้ใส่รูป เลยให้เป็น null ได้)
+  final String? imagePath;
   final String? notes;
   final String? imageUrl;
   bool isConsumed;
@@ -46,9 +46,9 @@ class FoodItem {
     required this.emoji,
     required this.purchaseDate,
     required this.expiryDate,
-    this.quantity = 1.0,      // ค่าเริ่มต้นเป็น 1.0
-    this.unit = 'ชิ้น',         // ค่าเริ่มต้นเป็น 'ชิ้น'
-    this.imagePath,           // รับค่า imagePath
+    this.quantity = 1.0,
+    this.unit = 'piece',
+    this.imagePath,
     this.notes,
     this.imageUrl,
     this.isConsumed = false,
@@ -74,16 +74,11 @@ class FoodItem {
   }
 
   String get daysRemainingText {
-    if (daysRemaining > 0) {
-      return '$daysRemaining days left';
-    } else if (daysRemaining == 0) {
-      return 'Expires today!';
-    } else {
-      return '${daysRemaining.abs()} days ago';
-    }
+    if (daysRemaining > 0) return '$daysRemaining days left';
+    if (daysRemaining == 0) return 'Expires today!';
+    return '${daysRemaining.abs()} days ago';
   }
 
-  // ===== Firestore conversion =====
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -111,14 +106,18 @@ class FoodItem {
       emoji: map['emoji'] as String? ?? '📦',
       purchaseDate: DateTime.parse(map['purchaseDate'] as String),
       expiryDate: DateTime.parse(map['expiryDate'] as String),
-      quantity: map['quantity'] as int? ?? 1,
+      quantity: (map['quantity'] as num?)?.toDouble() ?? 1.0,
       unit: map['unit'] as String? ?? 'piece',
       notes: map['notes'] as String?,
       imageUrl: map['imageUrl'] as String?,
       isConsumed: map['isConsumed'] as bool? ?? false,
       isDiscarded: map['isDiscarded'] as bool? ?? false,
-      consumedDate: map['consumedDate'] != null ? DateTime.parse(map['consumedDate'] as String) : null,
-      discardedDate: map['discardedDate'] != null ? DateTime.parse(map['discardedDate'] as String) : null,
+      consumedDate: map['consumedDate'] != null
+          ? DateTime.parse(map['consumedDate'] as String)
+          : null,
+      discardedDate: map['discardedDate'] != null
+          ? DateTime.parse(map['discardedDate'] as String)
+          : null,
     );
   }
 }

@@ -14,7 +14,7 @@ import '../../../providers/food_items_provider.dart';
 const List<String> _unitOptions = ['unit', 'pack', 'box', 'bag', 'kg', 'g', 'L', 'mL', 'piece'];
 
 void _showQuantityEditor(BuildContext context, FoodItem item, FoodItemsProvider provider) {
-  int tempQty = item.quantity;
+  int tempQty = item.quantity.toInt();
   String tempUnit = _unitOptions.contains(item.unit) ? item.unit : 'unit';
 
   showDialog(
@@ -25,7 +25,6 @@ void _showQuantityEditor(BuildContext context, FoodItem item, FoodItemsProvider 
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Stepper
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -50,7 +49,6 @@ void _showQuantityEditor(BuildContext context, FoodItem item, FoodItemsProvider 
               ],
             ),
             const SizedBox(height: 12),
-            // Unit Dropdown
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
@@ -63,9 +61,7 @@ void _showQuantityEditor(BuildContext context, FoodItem item, FoodItemsProvider 
                   value: tempUnit,
                   isExpanded: true,
                   style: const TextStyle(fontSize: 16, color: AppColors.textPrimary),
-                  items: _unitOptions
-                      .map((u) => DropdownMenuItem(value: u, child: Text(u)))
-                      .toList(),
+                  items: _unitOptions.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
                   onChanged: (val) {
                     if (val != null) setDlgState(() => tempUnit = val);
                   },
@@ -75,10 +71,7 @@ void _showQuantityEditor(BuildContext context, FoodItem item, FoodItemsProvider 
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               provider.updateQuantity(item.id, tempQty, tempUnit);
@@ -113,9 +106,7 @@ class ItemDetailScreen extends StatelessWidget {
           ),
           body: SingleChildScrollView(
             child: Column(children: [
-              // Image or Emoji display
               _ItemImage(item: item, provider: provider),
-
               Padding(
                 padding: const EdgeInsets.all(AppTheme.spacingMD),
                 child: Column(
@@ -126,7 +117,7 @@ class ItemDetailScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: item.category.color.withOpacity(0.15),
+                        color: item.category.color.withAlpha(38),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -142,7 +133,7 @@ class ItemDetailScreen extends StatelessWidget {
                     _DetailCard(
                       icon: '📦',
                       label: 'Quantity',
-                      value: '${item.quantity} ${item.unit}',
+                      value: '${item.quantity.toInt()} ${item.unit}',
                       onTap: () => _showQuantityEditor(context, item, provider),
                     ),
                     const SizedBox(height: 10),
@@ -191,7 +182,6 @@ class ItemDetailScreen extends StatelessWidget {
   }
 }
 
-// ===== Widget แสดงรูปภาพ + ปุ่ม Retake =====
 class _ItemImage extends StatelessWidget {
   final FoodItem item;
   final FoodItemsProvider provider;
@@ -201,7 +191,6 @@ class _ItemImage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // รูปภาพหรือ emoji
         Container(
           width: double.infinity,
           height: 200,
@@ -211,23 +200,14 @@ class _ItemImage extends StatelessWidget {
                   errorBuilder: (_, __, ___) => Center(child: Text(item.emoji, style: const TextStyle(fontSize: 100))))
               : Center(child: Text(item.emoji, style: const TextStyle(fontSize: 100))),
         ),
-        // ปุ่ม Retake / Take Photo
         Positioned(
           bottom: 10,
           right: 10,
           child: Row(
             children: [
-              _PhotoButton(
-                icon: Icons.camera_alt,
-                label: 'Retake',
-                onTap: () => _retakePhoto(context, ImageSource.camera),
-              ),
+              _PhotoButton(icon: Icons.camera_alt, label: 'Retake', onTap: () => _retakePhoto(context, ImageSource.camera)),
               const SizedBox(width: 8),
-              _PhotoButton(
-                icon: Icons.upload_file,
-                label: 'Upload',
-                onTap: () => _retakePhoto(context, ImageSource.gallery),
-              ),
+              _PhotoButton(icon: Icons.upload_file, label: 'Upload', onTap: () => _retakePhoto(context, ImageSource.gallery)),
             ],
           ),
         ),
@@ -262,10 +242,7 @@ class _PhotoButton extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.black54,
-          borderRadius: BorderRadius.circular(20),
-        ),
+        decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20)),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -294,7 +271,7 @@ class _DetailCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 1))],
+        boxShadow: [BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 4, offset: const Offset(0, 1))],
       ),
       child: Row(children: [
         Text(icon, style: const TextStyle(fontSize: 22)),
@@ -305,17 +282,12 @@ class _DetailCard extends StatelessWidget {
             Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: valueColor ?? AppColors.textPrimary)),
           ]),
         ),
-        if (onTap != null)
-          const Icon(Icons.edit_outlined, size: 18, color: AppColors.primary),
+        if (onTap != null) const Icon(Icons.edit_outlined, size: 18, color: AppColors.primary),
       ]),
     );
 
     if (onTap != null) {
-      return InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: card,
-      );
+      return InkWell(onTap: onTap, borderRadius: BorderRadius.circular(12), child: card);
     }
     return card;
   }

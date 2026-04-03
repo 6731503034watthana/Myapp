@@ -91,7 +91,7 @@ class _AddItemFormScreenState extends State<AddItemFormScreen> {
         emoji: _selectedCategory.emoji,
         purchaseDate: DateTime.now(),
         expiryDate: _expiryDate,
-        quantity: _quantity,
+        quantity: _quantity.toDouble(),
         unit: _selectedUnit,
       );
 

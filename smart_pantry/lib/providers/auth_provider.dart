@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:smart_pantry/services/firestore_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final fb.FirebaseAuth _auth = fb.FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
   final FirestoreService _firestoreService = FirestoreService();
 
   fb.User? _user;
@@ -20,14 +18,12 @@ class AuthProvider extends ChangeNotifier {
   String get displayName => _user?.displayName ?? _user?.email ?? 'User';
 
   AuthProvider() {
-    // Listen Firebase auth state
     _auth.authStateChanges().listen((fb.User? user) {
       _user = user;
       notifyListeners();
     });
   }
 
-  // ===== Login ด้วย Email + Password =====
   Future<bool> loginWithEmail(String email, String password) async {
     _isLoading = true;
     _error = null;
@@ -45,7 +41,6 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // ===== Sign Up ด้วย Email + Password =====
   Future<bool> signUpWithEmail(String email, String password, String name) async {
     _isLoading = true;
     _error = null;
@@ -55,12 +50,10 @@ class AuthProvider extends ChangeNotifier {
         email: email,
         password: password,
       );
-      // ตั้งชื่อ
       await credential.user?.updateDisplayName(name);
       await credential.user?.reload();
       _user = _auth.currentUser;
 
-      // สร้าง default categories ให้ user ใหม่
       if (_user != null) {
         await _firestoreService.initDefaultCategories(_user!.uid);
       }
@@ -76,31 +69,18 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // ===== Login ด้วย Google =====
   Future<bool> loginWithGoogle() async {
     _isLoading = true;
     _error = null;
     notifyListeners();
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        _isLoading = false;
-        notifyListeners();
-        return false; // ผู้ใช้ยกเลิก
-      }
+      // google_sign_in v7: ใช้ Firebase signInWithProvider แทน
+      final googleProvider = fb.GoogleAuthProvider();
+      final userCredential = await _auth.signInWithProvider(googleProvider);
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final credential = fb.GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final userCredential = await _auth.signInWithCredential(credential);
-
-      // ถ้าเป็น user ใหม่ สร้าง default categories
-     // ถ้าเป็น user ใหม่ สร้าง default categories
-      if (userCredential.additionalUserInfo?.isNewUser == true && userCredential.user != null) {
-      await _firestoreService.initDefaultCategories(userCredential.user!.uid);
+      if (userCredential.additionalUserInfo?.isNewUser == true &&
+          userCredential.user != null) {
+        await _firestoreService.initDefaultCategories(userCredential.user!.uid);
       }
       _isLoading = false;
       notifyListeners();
@@ -113,9 +93,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // ===== Logout =====
   Future<void> logout() async {
-    await _googleSignIn.signOut();
     await _auth.signOut();
     _user = null;
     notifyListeners();
