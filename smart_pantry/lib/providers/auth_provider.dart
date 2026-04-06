@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:smart_pantry/services/firestore_service.dart';
 
 class AuthProvider extends ChangeNotifier {
@@ -74,14 +75,30 @@ class AuthProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      // google_sign_in v7: ใช้ Firebase signInWithProvider แทน
-      final googleProvider = fb.GoogleAuthProvider();
-      final userCredential = await _auth.signInWithProvider(googleProvider);
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+      if (googleUser == null) {
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final fb.AuthCredential credential = fb.GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await _auth.signInWithCredential(credential);
 
       if (userCredential.additionalUserInfo?.isNewUser == true &&
           userCredential.user != null) {
         await _firestoreService.initDefaultCategories(userCredential.user!.uid);
       }
+
       _isLoading = false;
       notifyListeners();
       return true;
@@ -94,6 +111,8 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+    await googleSignIn.signOut();
     await _auth.signOut();
     _user = null;
     notifyListeners();
