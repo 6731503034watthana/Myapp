@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:91678987925:android:c15f9e8a25dc6f4dfdad9c",
         "android_client_info": {
-          "package_name": "com.example.smart_pantry"
+          "package_name": "com.watthana.smartpantry"
         }
       },
       "oauth_client": [
@@ -17,7 +17,7 @@
           "client_id": "91678987925-td9dlmdc8kc8ev6nmimihfa4cjoq0b57.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.smart_pantry",
+            "package_name": "com.watthana.smartpantry",
             "certificate_hash": "97525f736c08b6b337c753be7df1d5892803b22c"
           }
         },
@@ -42,7 +42,7 @@
               "client_id": "91678987925-695553jnv9kt8t19pf7unm56jfh0tkp5.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.smartPantry"
+                "bundle_id": "com.watthana.smartpantry"
               }
             }
           ]
